@@ -39,7 +39,7 @@
 NRK_STK Stack1[NRK_APP_STACKSIZE];
 nrk_task_type TaskOne;
 void Task_Observe_Noise_In_The_Room(void);
-uint16_t calculate_rms(uint16_t audios [], int8_t window_size);
+uint16_t calculate_rms(uint16_t audios [], int8_t size, int8_t window_size);
 
 
 void nrk_create_taskset();
@@ -71,8 +71,9 @@ void
 Task_Observe_Noise_In_The_Room(){
 
 int8_t fd, val, index;
+int8_t window_size = 10;
 uint16_t buf;
-uint16_t audio[10] = {0};
+uint16_t audio[20] = {0};
 int8_t size = sizeof(audio)/sizeof(audio[0]);
 
 // Open ADC device as read 
@@ -84,8 +85,7 @@ if(fd==NRK_ERROR) nrk_kprintf(PSTR("Failed to open sensor driver\r\n"));
 		val=nrk_set_status(fd,SENSOR_SELECT,AUDIO_P2P);
 		nrk_spin_wait_us(60000);
 		val=nrk_read(fd,&buf,2);
-		// printf( " audio=%d\r\n",buf);
-		nrk_wait_until_next_period();
+		printf( " audio=%d\r\n",buf);
 
 		audio[index] = buf;
 		index++;
@@ -93,28 +93,41 @@ if(fd==NRK_ERROR) nrk_kprintf(PSTR("Failed to open sensor driver\r\n"));
 		if(index == size)
 		{
 			// calculate and print rms
-			uint16_t rms = calculate_rms(audio, size);
-			printf( " calculate_rms=%d\r\n",rms);
+			uint16_t rms = calculate_rms(audio, size, window_size);
 			index =0;
 		}
+
+		nrk_wait_until_next_period();
 	}
 }
 
 uint16_t
-calculate_rms(uint16_t audios [], int8_t window_size)
+calculate_rms(uint16_t audios [], int8_t size, int8_t window_size)
 {
-	uint16_t rawrms ;
-	uint16_t rms ;
+	uint8_t index = 0;
+	uint8_t window_count = 0;
 
-	for(uint8_t count = 0 ; count < window_size ; count++ )
+	while(index + window_size <= size)
 	{
-		rawrms += audios[count] * audios[count] ;
+		uint16_t rawrms  =0;
+		uint16_t rms  = 0;
+
+		for(uint8_t count = index ; count < index + window_size ; count++ )
+		{
+			rawrms += audios[count] * audios[count] ;
+		}
+
+		rms = rawrms / window_size ;
+		rms = sqrt(rms) ;
+
+		printf( "window no =%d", window_count);
+		printf( " has rms value =%d\r\n",rms);
+
+		window_count++;
+		index = index + window_size;
 	}
 
-	rms = rawrms / window_size ;
-	rms = sqrt(rms) ;
-
-	return rms;
+	return 0;
 }
 
 void
@@ -127,9 +140,9 @@ nrk_create_taskset()
   TaskOne.Type = BASIC_TASK;
   TaskOne.SchType = PREEMPTIVE;
   TaskOne.period.secs = 0;
-  TaskOne.period.nano_secs = 20*NANOS_PER_MS; //*NANOS_PER_MS;
+  TaskOne.period.nano_secs = 500*NANOS_PER_MS; //*NANOS_PER_MS;
   TaskOne.cpu_reserve.secs = 0;
-  TaskOne.cpu_reserve.nano_secs =  100*NANOS_PER_MS;
+  TaskOne.cpu_reserve.nano_secs = 100*NANOS_PER_MS;
   TaskOne.offset.secs = 0;
   TaskOne.offset.nano_secs= 0;
   nrk_activate_task (&TaskOne);
