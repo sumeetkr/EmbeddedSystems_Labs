@@ -7,24 +7,15 @@
    7               	__zero_reg__ = 1
   10               		.text
   11               	.Ltext0:
- 291               	.global	__floatunsisf
- 292               		.section	.rodata.str1.1,"aMS",@progbits,1
- 293               	.LC0:
- 294 0000 7769 6E64 		.string	"window no =%d"
- 294      6F77 206E 
- 294      6F20 3D25 
- 294      6400 
- 295               	.global	__fixunssfsi
- 296               	.LC1:
- 297 000e 2068 6173 		.string	" has rms value =%d\r\n"
- 297      2072 6D73 
- 297      2076 616C 
- 297      7565 203D 
- 297      2564 0D0A 
- 298               		.text
- 303               	.global	calculate_rms
- 305               	calculate_rms:
- 306               		.stabd	46,0,0
+ 291               		.section	.rodata.str1.1,"aMS",@progbits,1
+ 292               	.LC0:
+ 293 0000 2061 7564 		.string	" audio=%d\r\n"
+ 293      696F 3D25 
+ 293      640D 0A00 
+ 294               		.text
+ 296               	.global	Collect_Audio_Data
+ 298               	Collect_Audio_Data:
+ 299               		.stabd	46,0,0
    1:main.c        **** /******************************************************************************
    2:main.c        **** *  Nano-RK, a real-time operating system for sensor networks.
    3:main.c        **** *  Copyright (C) 2007, Real-Time and Multimedia Lab, Carnegie Mellon University
@@ -64,644 +55,856 @@
   37:main.c        **** #include <ff_basic_sensor.h>
   38:main.c        **** 
   39:main.c        **** NRK_STK Stack1[NRK_APP_STACKSIZE];
-  40:main.c        **** nrk_task_type TaskOne;
-  41:main.c        **** void Task_Observe_Noise_In_The_Room(void);
-  42:main.c        **** uint16_t calculate_rms(uint16_t audios [], int8_t size, int8_t window_size);
+  40:main.c        **** NRK_STK Stack2[NRK_APP_STACKSIZE];
+  41:main.c        **** nrk_task_type TaskOne;
+  42:main.c        **** nrk_task_type TaskTwo;
   43:main.c        **** 
-  44:main.c        **** 
-  45:main.c        **** void nrk_create_taskset();
-  46:main.c        **** void nrk_register_drivers();
-  47:main.c        **** uint8_t kill_stack(uint8_t val);
-  48:main.c        **** 
-  49:main.c        **** int
-  50:main.c        **** main ()
-  51:main.c        **** {
-  52:main.c        ****   uint8_t t;
-  53:main.c        ****   nrk_setup_ports();
-  54:main.c        ****   nrk_setup_uart(UART_BAUDRATE_115K2);
-  55:main.c        **** 
-  56:main.c        **** 
-  57:main.c        ****   printf( PSTR("starting...\r\n") );
-  58:main.c        **** 
-  59:main.c        ****   nrk_init();
-  60:main.c        ****   nrk_time_set(0,0);
+  44:main.c        **** void Collect_Audio_Data(void);
+  45:main.c        **** uint16_t calculate_rms(uint16_t audios [], int8_t size, int8_t window_size);
+  46:main.c        **** void Analyze_Audio_Data(void);
+  47:main.c        **** 
+  48:main.c        **** void nrk_create_taskset();
+  49:main.c        **** void nrk_register_drivers();
+  50:main.c        **** uint8_t kill_stack(uint8_t val);
+  51:main.c        **** uint16_t * audio_data;
+  52:main.c        **** int8_t audio_data_size;
+  53:main.c        **** 
+  54:main.c        **** int
+  55:main.c        **** main ()
+  56:main.c        **** {
+  57:main.c        ****   uint8_t t;
+  58:main.c        ****   nrk_setup_ports();
+  59:main.c        ****   nrk_setup_uart(UART_BAUDRATE_115K2);
+  60:main.c        **** 
   61:main.c        **** 
-  62:main.c        ****   nrk_register_drivers();
-  63:main.c        ****   nrk_create_taskset ();
-  64:main.c        ****   nrk_start();
-  65:main.c        ****   
-  66:main.c        ****   return 0;
-  67:main.c        **** }
+  62:main.c        ****   printf( PSTR("starting...\r\n") );
+  63:main.c        ****   audio_data_size = 30;
+  64:main.c        ****   audio_data = malloc(audio_data_size * (sizeof audio_data[0]));
+  65:main.c        **** 
+  66:main.c        ****   nrk_init();
+  67:main.c        ****   nrk_time_set(0,0);
   68:main.c        **** 
-  69:main.c        **** 
-  70:main.c        **** void 
-  71:main.c        **** Task_Observe_Noise_In_The_Room(){
-  72:main.c        **** 
-  73:main.c        **** int8_t fd, val, index;
-  74:main.c        **** int8_t window_size = 10;
-  75:main.c        **** uint16_t buf;
-  76:main.c        **** uint16_t audio[20] = {0};
-  77:main.c        **** int8_t size = sizeof(audio)/sizeof(audio[0]);
-  78:main.c        **** 
-  79:main.c        **** // Open ADC device as read 
-  80:main.c        **** fd=nrk_open(FIREFLY_3_SENSOR_BASIC,READ);
-  81:main.c        **** if(fd==NRK_ERROR) nrk_kprintf(PSTR("Failed to open sensor driver\r\n"));
+  69:main.c        ****   nrk_register_drivers();
+  70:main.c        ****   nrk_create_taskset ();
+  71:main.c        ****   nrk_start();
+  72:main.c        ****   
+  73:main.c        ****   return 0;
+  74:main.c        **** }
+  75:main.c        **** 
+  76:main.c        **** 
+  77:main.c        **** void 
+  78:main.c        **** Collect_Audio_Data(){
+ 301               	.LM0:
+ 302               	.LFBB1:
+ 303 0000 CF93      		push r28
+ 304 0002 DF93      		push r29
+ 305 0004 00D0      		rcall .
+ 306 0006 CDB7      		in r28,__SP_L__
+ 307 0008 DEB7      		in r29,__SP_H__
+ 308               	/* prologue: function */
+ 309               	/* frame size = 2 */
+ 310               	/* stack size = 4 */
+ 311               	.L__stack_usage = 4
+  79:main.c        **** 
+  80:main.c        **** int8_t fd, val, index;
+  81:main.c        **** uint16_t buf;
   82:main.c        **** 
-  83:main.c        **** 	while(1)
-  84:main.c        **** 	{
-  85:main.c        **** 		val=nrk_set_status(fd,SENSOR_SELECT,AUDIO_P2P);
-  86:main.c        **** 		nrk_spin_wait_us(60000);
-  87:main.c        **** 		val=nrk_read(fd,&buf,2);
-  88:main.c        **** 		printf( " audio=%d\r\n",buf);
-  89:main.c        **** 
-  90:main.c        **** 		audio[index] = buf;
-  91:main.c        **** 		index++;
-  92:main.c        **** 
-  93:main.c        **** 		if(index == size)
-  94:main.c        **** 		{
-  95:main.c        **** 			// calculate and print rms
-  96:main.c        **** 			uint16_t rms = calculate_rms(audio, size, window_size);
-  97:main.c        **** 			index =0;
-  98:main.c        **** 		}
-  99:main.c        **** 
- 100:main.c        **** 		nrk_wait_until_next_period();
- 101:main.c        **** 	}
- 102:main.c        **** }
- 103:main.c        **** 
- 104:main.c        **** uint16_t
- 105:main.c        **** calculate_rms(uint16_t audios [], int8_t size, int8_t window_size)
- 106:main.c        **** {
- 308               	.LM0:
- 309               	.LFBB1:
- 310 0000 2F92      		push r2
- 311 0002 3F92      		push r3
- 312 0004 4F92      		push r4
- 313 0006 5F92      		push r5
- 314 0008 6F92      		push r6
- 315 000a 7F92      		push r7
- 316 000c 8F92      		push r8
- 317 000e 9F92      		push r9
- 318 0010 AF92      		push r10
- 319 0012 BF92      		push r11
- 320 0014 CF92      		push r12
- 321 0016 DF92      		push r13
- 322 0018 EF92      		push r14
- 323 001a FF92      		push r15
- 324 001c 0F93      		push r16
- 325 001e 1F93      		push r17
- 326 0020 CF93      		push r28
- 327 0022 DF93      		push r29
- 328 0024 1F92      		push __zero_reg__
- 329 0026 CDB7      		in r28,__SP_L__
- 330 0028 DEB7      		in r29,__SP_H__
- 331               	/* prologue: function */
- 332               	/* frame size = 1 */
- 333               	/* stack size = 19 */
- 334               	.L__stack_usage = 19
- 335 002a 5C01      		movw r10,r24
- 107:main.c        **** 	uint8_t index = 0;
- 108:main.c        **** 	uint8_t window_count = 0;
- 337               	.LM1:
- 338 002c 812C      		mov r8,__zero_reg__
- 107:main.c        **** 	uint8_t index = 0;
- 340               	.LM2:
- 341 002e 912C      		mov r9,__zero_reg__
+  83:main.c        **** // Open ADC device as read 
+  84:main.c        **** fd=nrk_open(FIREFLY_3_SENSOR_BASIC,READ);
+ 313               	.LM1:
+ 314 000a 65E0      		ldi r22,lo8(5)
+ 315 000c 83E0      		ldi r24,lo8(3)
+ 316 000e 0E94 0000 		call nrk_open
+ 317 0012 E82E      		mov r14,r24
+  85:main.c        **** if(fd==NRK_ERROR) nrk_kprintf(PSTR("Failed to open sensor driver\r\n"));
+ 319               	.LM2:
+ 320 0014 8FEF      		ldi r24,lo8(-1)
+ 321 0016 E812      		cpse r14,r24
+ 322 0018 00C0      		rjmp .L4
+ 324               	.LM3:
+ 325 001a 80E0      		ldi r24,lo8(__c.3162)
+ 326 001c 90E0      		ldi r25,hi8(__c.3162)
+ 327 001e 0E94 0000 		call nrk_kprintf
+ 328               	.L4:
+  86:main.c        **** 
+  87:main.c        **** 	while(1)
+  88:main.c        **** 	{
+  89:main.c        **** 		val=nrk_set_status(fd,SENSOR_SELECT,AUDIO_P2P);
+  90:main.c        **** 		nrk_spin_wait_us(60000);
+  91:main.c        **** 		val=nrk_read(fd,&buf,2);
+  92:main.c        **** 		printf( " audio=%d\r\n",buf);
+ 330               	.LM4:
+ 331 0022 00E0      		ldi r16,lo8(.LC0)
+ 332 0024 10E0      		ldi r17,hi8(.LC0)
+ 333               	.L6:
+  89:main.c        **** 		val=nrk_set_status(fd,SENSOR_SELECT,AUDIO_P2P);
+ 335               	.LM5:
+ 336 0026 4CE0      		ldi r20,lo8(12)
+ 337 0028 61E0      		ldi r22,lo8(1)
+ 338 002a 8E2D      		mov r24,r14
+ 339 002c 0E94 0000 		call nrk_set_status
+  90:main.c        **** 		nrk_spin_wait_us(60000);
+ 341               	.LM6:
+ 342 0030 80E6      		ldi r24,lo8(96)
+ 343 0032 9AEE      		ldi r25,lo8(-22)
+ 344 0034 0E94 0000 		call nrk_spin_wait_us
+  91:main.c        **** 		val=nrk_read(fd,&buf,2);
+ 346               	.LM7:
+ 347 0038 42E0      		ldi r20,lo8(2)
+ 348 003a BE01      		movw r22,r28
+ 349 003c 6F5F      		subi r22,-1
+ 350 003e 7F4F      		sbci r23,-1
+ 351 0040 8E2D      		mov r24,r14
+ 352 0042 0E94 0000 		call nrk_read
+ 354               	.LM8:
+ 355 0046 8A81      		ldd r24,Y+2
+ 356 0048 8F93      		push r24
+ 357 004a 8981      		ldd r24,Y+1
+ 358 004c 8F93      		push r24
+ 359 004e 1F93      		push r17
+ 360 0050 0F93      		push r16
+ 361 0052 0E94 0000 		call printf
+  93:main.c        **** 
+  94:main.c        **** 		nrk_led_clr(BLUE_LED);
+ 363               	.LM9:
+ 364 0056 83E0      		ldi r24,lo8(3)
+ 365 0058 90E0      		ldi r25,0
+ 366 005a 0E94 0000 		call nrk_led_clr
+  95:main.c        **** 		nrk_led_clr(RED_LED);
+ 368               	.LM10:
+ 369 005e 80E0      		ldi r24,0
+ 370 0060 90E0      		ldi r25,0
+ 371 0062 0E94 0000 		call nrk_led_clr
+  96:main.c        **** 		nrk_led_toggle(RED_LED);
+ 373               	.LM11:
+ 374 0066 80E0      		ldi r24,0
+ 375 0068 90E0      		ldi r25,0
+ 376 006a 0E94 0000 		call nrk_led_toggle
+  97:main.c        **** 
+  98:main.c        **** 		audio_data[index] = buf;
+ 378               	.LM12:
+ 379 006e 2981      		ldd r18,Y+1
+ 380 0070 3A81      		ldd r19,Y+2
+ 381 0072 4F2D      		mov r20,r15
+ 382 0074 440F      		lsl r20
+ 383 0076 550B      		sbc r21,r21
+ 384 0078 E091 0000 		lds r30,audio_data
+ 385 007c F091 0000 		lds r31,audio_data+1
+ 386 0080 E40F      		add r30,r20
+ 387 0082 F51F      		adc r31,r21
+ 388 0084 3183      		std Z+1,r19
+ 389 0086 2083      		st Z,r18
+  99:main.c        **** 		index++;
+ 391               	.LM13:
+ 392 0088 F394      		inc r15
+ 100:main.c        **** 
+ 101:main.c        **** 		if(index == audio_data_size)
+ 394               	.LM14:
+ 395 008a 0F90      		pop __tmp_reg__
+ 396 008c 0F90      		pop __tmp_reg__
+ 397 008e 0F90      		pop __tmp_reg__
+ 398 0090 0F90      		pop __tmp_reg__
+ 399 0092 8091 0000 		lds r24,audio_data_size
+ 400 0096 F812      		cpse r15,r24
+ 401 0098 00C0      		rjmp .L3
+ 102:main.c        **** 		{
+ 103:main.c        **** 			index =0;
+ 403               	.LM15:
+ 404 009a F12C      		mov r15,__zero_reg__
+ 405               	.L3:
+ 104:main.c        **** 		}
+ 105:main.c        **** 
+ 106:main.c        **** 		nrk_wait_until_next_period();
+ 407               	.LM16:
+ 408 009c 0E94 0000 		call nrk_wait_until_next_period
+ 107:main.c        **** 	}
+ 410               	.LM17:
+ 411 00a0 00C0      		rjmp .L6
+ 418               	.Lscope1:
+ 420               		.stabd	78,0,0
+ 421               	.global	__floatunsisf
+ 422               		.section	.rodata.str1.1
+ 423               	.LC1:
+ 424 000c 7769 6E64 		.string	"window no =%d"
+ 424      6F77 206E 
+ 424      6F20 3D25 
+ 424      6400 
+ 425               	.global	__fixunssfsi
+ 426               	.LC2:
+ 427 001a 2068 6173 		.string	" has rms value =%d\r\n"
+ 427      2072 6D73 
+ 427      2076 616C 
+ 427      7565 203D 
+ 427      2564 0D0A 
+ 428               		.text
+ 433               	.global	calculate_rms
+ 435               	calculate_rms:
+ 436               		.stabd	46,0,0
+ 108:main.c        **** }
  109:main.c        **** 
- 110:main.c        **** 	while(index + window_size <= size)
- 343               	.LM3:
- 344 0030 E42E      		mov r14,r20
- 345 0032 FF24      		clr r15
- 346 0034 E7FC      		sbrc r14,7
- 347 0036 F094      		com r15
- 348 0038 C62E      		mov r12,r22
- 349 003a DD24      		clr r13
- 350 003c C7FC      		sbrc r12,7
- 351 003e D094      		com r13
- 352               	.LBB2:
- 111:main.c        **** 	{
- 112:main.c        **** 		uint16_t rawrms  =0;
- 113:main.c        **** 		uint16_t rms  = 0;
- 114:main.c        **** 
- 115:main.c        **** 		for(uint8_t count = index ; count < index + window_size ; count++ )
- 116:main.c        **** 		{
- 117:main.c        **** 			rawrms += audios[count] * audios[count] ;
- 118:main.c        **** 		}
- 119:main.c        **** 
- 120:main.c        **** 		rms = rawrms / window_size ;
- 121:main.c        **** 		rms = sqrt(rms) ;
- 122:main.c        **** 
- 123:main.c        **** 		printf( "window no =%d", window_count);
- 354               	.LM4:
- 355 0040 70E0      		ldi r23,lo8(.LC0)
- 356 0042 272E      		mov r2,r23
- 357 0044 70E0      		ldi r23,hi8(.LC0)
- 358 0046 372E      		mov r3,r23
- 124:main.c        **** 		printf( " has rms value =%d\r\n",rms);
- 360               	.LM5:
- 361 0048 00E0      		ldi r16,lo8(.LC1)
- 362 004a 10E0      		ldi r17,hi8(.LC1)
- 363               	.LBE2:
- 110:main.c        **** 	while(index + window_size <= size)
- 365               	.LM6:
- 366 004c 00C0      		rjmp .L2
- 367               	.L3:
- 368               	.LBB5:
- 369               	.LBB3:
- 117:main.c        **** 			rawrms += audios[count] * audios[count] ;
- 371               	.LM7:
- 372 004e EE0F      		lsl r30
- 373 0050 FF1F      		rol r31
- 374 0052 EA0D      		add r30,r10
- 375 0054 FB1D      		adc r31,r11
- 376 0056 6081      		ld r22,Z
- 377 0058 7181      		ldd r23,Z+1
- 378 005a 669F      		mul r22,r22
- 379 005c F001      		movw r30,r0
- 380 005e 679F      		mul r22,r23
- 381 0060 F00D      		add r31,r0
- 382 0062 F00D      		add r31,r0
- 383 0064 1124      		clr r1
- 384 0066 8E0F      		add r24,r30
- 385 0068 9F1F      		adc r25,r31
- 115:main.c        **** 		for(uint8_t count = index ; count < index + window_size ; count++ )
- 387               	.LM8:
- 388 006a 5F5F      		subi r21,lo8(-(1))
- 389 006c 00C0      		rjmp .L4
- 390               	.L5:
- 391               	.LBE3:
- 392               	.LBE5:
- 110:main.c        **** 	while(index + window_size <= size)
- 394               	.LM9:
- 395 006e 592D      		mov r21,r9
- 396 0070 80E0      		ldi r24,0
- 397 0072 90E0      		ldi r25,0
- 398               	.L4:
- 399               	.LBB6:
- 400               	.LBB4:
- 115:main.c        **** 		for(uint8_t count = index ; count < index + window_size ; count++ )
- 402               	.LM10:
- 403 0074 E52F      		mov r30,r21
- 404 0076 F0E0      		ldi r31,0
- 405 0078 E217      		cp r30,r18
- 406 007a F307      		cpc r31,r19
- 407 007c 04F0      		brlt .L3
- 408               	.LBE4:
- 120:main.c        **** 		rms = rawrms / window_size ;
- 410               	.LM11:
- 411 007e B701      		movw r22,r14
- 412 0080 0E94 0000 		call __udivmodhi4
- 121:main.c        **** 		rms = sqrt(rms) ;
- 414               	.LM12:
- 415 0084 80E0      		ldi r24,0
- 416 0086 90E0      		ldi r25,0
- 417 0088 4983      		std Y+1,r20
- 418 008a 0E94 0000 		call __floatunsisf
- 419 008e 0E94 0000 		call sqrt
- 420 0092 2B01      		movw r4,r22
- 421 0094 3C01      		movw r6,r24
- 123:main.c        **** 		printf( "window no =%d", window_count);
- 423               	.LM13:
- 424 0096 1F92      		push __zero_reg__
- 425 0098 8F92      		push r8
- 426 009a 3F92      		push r3
- 427 009c 2F92      		push r2
- 428 009e 0E94 0000 		call printf
- 121:main.c        **** 		rms = sqrt(rms) ;
- 430               	.LM14:
- 431 00a2 C301      		movw r24,r6
- 432 00a4 B201      		movw r22,r4
- 433 00a6 0E94 0000 		call __fixunssfsi
- 435               	.LM15:
- 436 00aa 7F93      		push r23
- 437 00ac 6F93      		push r22
- 438 00ae 1F93      		push r17
- 439 00b0 0F93      		push r16
- 440 00b2 0E94 0000 		call printf
+ 110:main.c        **** uint16_t
+ 111:main.c        **** calculate_rms(uint16_t audios [], int8_t size, int8_t window_size)
+ 112:main.c        **** {
+ 438               	.LM18:
+ 439               	.LFBB2:
+ 440 00a2 2F92      		push r2
+ 441 00a4 3F92      		push r3
+ 442 00a6 4F92      		push r4
+ 443 00a8 5F92      		push r5
+ 444 00aa 6F92      		push r6
+ 445 00ac 7F92      		push r7
+ 446 00ae 8F92      		push r8
+ 447 00b0 9F92      		push r9
+ 448 00b2 AF92      		push r10
+ 449 00b4 BF92      		push r11
+ 450 00b6 CF92      		push r12
+ 451 00b8 DF92      		push r13
+ 452 00ba EF92      		push r14
+ 453 00bc FF92      		push r15
+ 454 00be 0F93      		push r16
+ 455 00c0 1F93      		push r17
+ 456 00c2 CF93      		push r28
+ 457 00c4 DF93      		push r29
+ 458 00c6 1F92      		push __zero_reg__
+ 459 00c8 CDB7      		in r28,__SP_L__
+ 460 00ca DEB7      		in r29,__SP_H__
+ 461               	/* prologue: function */
+ 462               	/* frame size = 1 */
+ 463               	/* stack size = 19 */
+ 464               	.L__stack_usage = 19
+ 465 00cc 5C01      		movw r10,r24
+ 113:main.c        **** 	uint8_t index = 0;
+ 114:main.c        **** 	uint8_t window_count = 0;
+ 467               	.LM19:
+ 468 00ce 812C      		mov r8,__zero_reg__
+ 113:main.c        **** 	uint8_t index = 0;
+ 470               	.LM20:
+ 471 00d0 912C      		mov r9,__zero_reg__
+ 115:main.c        **** 
+ 116:main.c        **** 	while(index + window_size <= size)
+ 473               	.LM21:
+ 474 00d2 E42E      		mov r14,r20
+ 475 00d4 FF24      		clr r15
+ 476 00d6 E7FC      		sbrc r14,7
+ 477 00d8 F094      		com r15
+ 478 00da C62E      		mov r12,r22
+ 479 00dc DD24      		clr r13
+ 480 00de C7FC      		sbrc r12,7
+ 481 00e0 D094      		com r13
+ 482               	.LBB2:
+ 117:main.c        **** 	{
+ 118:main.c        **** 		uint16_t rawrms  =0;
+ 119:main.c        **** 		uint16_t rms  = 0;
+ 120:main.c        **** 
+ 121:main.c        **** 		for(uint8_t count = index ; count < index + window_size ; count++ )
+ 122:main.c        **** 		{
+ 123:main.c        **** 			rawrms += audios[count] * audios[count] ;
+ 124:main.c        **** 		}
  125:main.c        **** 
- 126:main.c        **** 		window_count++;
- 442               	.LM16:
- 443 00b6 8394      		inc r8
- 105:main.c        **** calculate_rms(uint16_t audios [], int8_t size, int8_t window_size)
- 445               	.LM17:
- 446 00b8 4981      		ldd r20,Y+1
- 447 00ba 940E      		add r9,r20
- 448 00bc 0FB6      		in __tmp_reg__,__SREG__
- 449 00be F894      		cli
- 450 00c0 DEBF      		out __SP_H__,r29
- 451 00c2 0FBE      		out __SREG__,__tmp_reg__
- 452 00c4 CDBF      		out __SP_L__,r28
- 453               	.L2:
- 454               	.LBE6:
- 110:main.c        **** 	while(index + window_size <= size)
- 456               	.LM18:
- 457 00c6 9701      		movw r18,r14
- 458 00c8 290D      		add r18,r9
- 459 00ca 311D      		adc r19,__zero_reg__
- 460 00cc C216      		cp r12,r18
- 461 00ce D306      		cpc r13,r19
- 462 00d0 04F4      		brge .L5
- 127:main.c        **** 		index = index + window_size;
- 128:main.c        **** 	}
- 129:main.c        **** 
- 130:main.c        **** 	return 0;
- 131:main.c        **** }
- 464               	.LM19:
- 465 00d2 80E0      		ldi r24,0
- 466 00d4 90E0      		ldi r25,0
- 467               	/* epilogue start */
- 468 00d6 0F90      		pop __tmp_reg__
- 469 00d8 DF91      		pop r29
- 470 00da CF91      		pop r28
- 471 00dc 1F91      		pop r17
- 472 00de 0F91      		pop r16
- 473 00e0 FF90      		pop r15
- 474 00e2 EF90      		pop r14
- 475 00e4 DF90      		pop r13
- 476 00e6 CF90      		pop r12
- 477 00e8 BF90      		pop r11
- 478 00ea AF90      		pop r10
- 479 00ec 9F90      		pop r9
- 480 00ee 8F90      		pop r8
- 481 00f0 7F90      		pop r7
- 482 00f2 6F90      		pop r6
- 483 00f4 5F90      		pop r5
- 484 00f6 4F90      		pop r4
- 485 00f8 3F90      		pop r3
- 486 00fa 2F90      		pop r2
- 487 00fc 0895      		ret
- 508               	.Lscope1:
- 510               		.stabd	78,0,0
- 511               		.section	.rodata.str1.1
- 512               	.LC2:
- 513 0023 2061 7564 		.string	" audio=%d\r\n"
- 513      696F 3D25 
- 513      640D 0A00 
- 514               		.text
- 516               	.global	Task_Observe_Noise_In_The_Room
- 518               	Task_Observe_Noise_In_The_Room:
- 519               		.stabd	46,0,0
-  71:main.c        **** Task_Observe_Noise_In_The_Room(){
- 521               	.LM20:
- 522               	.LFBB2:
- 523 00fe CF93      		push r28
- 524 0100 DF93      		push r29
- 525 0102 CDB7      		in r28,__SP_L__
- 526 0104 DEB7      		in r29,__SP_H__
- 527 0106 AA97      		sbiw r28,42
- 528 0108 0FB6      		in __tmp_reg__,__SREG__
- 529 010a F894      		cli
- 530 010c DEBF      		out __SP_H__,r29
- 531 010e 0FBE      		out __SREG__,__tmp_reg__
- 532 0110 CDBF      		out __SP_L__,r28
- 533               	/* prologue: function */
- 534               	/* frame size = 42 */
- 535               	/* stack size = 44 */
- 536               	.L__stack_usage = 44
-  76:main.c        **** uint16_t audio[20] = {0};
- 538               	.LM21:
- 539 0112 FE01      		movw r30,r28
- 540 0114 3196      		adiw r30,1
- 541 0116 88E2      		ldi r24,lo8(40)
- 542 0118 DF01      		movw r26,r30
- 543               		0:
- 544 011a 1D92      		st X+,__zero_reg__
- 545 011c 8A95      		dec r24
- 546 011e 01F4      		brne 0b
-  80:main.c        **** fd=nrk_open(FIREFLY_3_SENSOR_BASIC,READ);
- 548               	.LM22:
- 549 0120 65E0      		ldi r22,lo8(5)
- 550 0122 83E0      		ldi r24,lo8(3)
- 551 0124 0E94 0000 		call nrk_open
- 552 0128 E82E      		mov r14,r24
-  81:main.c        **** if(fd==NRK_ERROR) nrk_kprintf(PSTR("Failed to open sensor driver\r\n"));
- 554               	.LM23:
- 555 012a BFEF      		ldi r27,lo8(-1)
- 556 012c 8B13      		cpse r24,r27
- 557 012e 00C0      		rjmp .L9
-  81:main.c        **** if(fd==NRK_ERROR) nrk_kprintf(PSTR("Failed to open sensor driver\r\n"));
- 559               	.LM24:
- 560 0130 80E0      		ldi r24,lo8(__c.3158)
- 561 0132 90E0      		ldi r25,hi8(__c.3158)
- 562 0134 0E94 0000 		call nrk_kprintf
- 563               	.L9:
-  88:main.c        **** 		printf( " audio=%d\r\n",buf);
- 565               	.LM25:
- 566 0138 00E0      		ldi r16,lo8(.LC2)
- 567 013a 10E0      		ldi r17,hi8(.LC2)
- 568               	.L10:
-  85:main.c        **** 		val=nrk_set_status(fd,SENSOR_SELECT,AUDIO_P2P);
- 570               	.LM26:
- 571 013c 4CE0      		ldi r20,lo8(12)
- 572 013e 61E0      		ldi r22,lo8(1)
- 573 0140 8E2D      		mov r24,r14
- 574 0142 0E94 0000 		call nrk_set_status
-  86:main.c        **** 		nrk_spin_wait_us(60000);
- 576               	.LM27:
- 577 0146 80E6      		ldi r24,lo8(96)
- 578 0148 9AEE      		ldi r25,lo8(-22)
- 579 014a 0E94 0000 		call nrk_spin_wait_us
-  87:main.c        **** 		val=nrk_read(fd,&buf,2);
- 581               	.LM28:
- 582 014e 42E0      		ldi r20,lo8(2)
- 583 0150 BE01      		movw r22,r28
- 584 0152 675D      		subi r22,-41
- 585 0154 7F4F      		sbci r23,-1
- 586 0156 8E2D      		mov r24,r14
- 587 0158 0E94 0000 		call nrk_read
-  88:main.c        **** 		printf( " audio=%d\r\n",buf);
- 589               	.LM29:
- 590 015c 8AA5      		ldd r24,Y+42
- 591 015e 8F93      		push r24
- 592 0160 89A5      		ldd r24,Y+41
- 593 0162 8F93      		push r24
- 594 0164 1F93      		push r17
- 595 0166 0F93      		push r16
- 596 0168 0E94 0000 		call printf
-  90:main.c        **** 		audio[index] = buf;
- 598               	.LM30:
- 599 016c EF2D      		mov r30,r15
- 600 016e EE0F      		lsl r30
- 601 0170 FF0B      		sbc r31,r31
- 602 0172 81E0      		ldi r24,lo8(1)
- 603 0174 90E0      		ldi r25,0
- 604 0176 8C0F      		add r24,r28
- 605 0178 9D1F      		adc r25,r29
- 606 017a E80F      		add r30,r24
- 607 017c F91F      		adc r31,r25
- 608 017e 29A5      		ldd r18,Y+41
- 609 0180 3AA5      		ldd r19,Y+42
- 610 0182 3183      		std Z+1,r19
- 611 0184 2083      		st Z,r18
-  91:main.c        **** 		index++;
- 613               	.LM31:
- 614 0186 F394      		inc r15
-  93:main.c        **** 		if(index == size)
- 616               	.LM32:
- 617 0188 0F90      		pop __tmp_reg__
- 618 018a 0F90      		pop __tmp_reg__
- 619 018c 0F90      		pop __tmp_reg__
- 620 018e 0F90      		pop __tmp_reg__
- 621 0190 94E1      		ldi r25,lo8(20)
- 622 0192 F912      		cpse r15,r25
- 623 0194 00C0      		rjmp .L8
- 624               	.LBB7:
-  96:main.c        **** 			uint16_t rms = calculate_rms(audio, size, window_size);
- 626               	.LM33:
- 627 0196 4AE0      		ldi r20,lo8(10)
- 628 0198 64E1      		ldi r22,lo8(20)
- 629 019a CE01      		movw r24,r28
- 630 019c 0196      		adiw r24,1
- 631 019e 0E94 0000 		call calculate_rms
-  97:main.c        **** 			index =0;
- 633               	.LM34:
- 634 01a2 F12C      		mov r15,__zero_reg__
- 635               	.L8:
- 636               	.LBE7:
- 100:main.c        **** 		nrk_wait_until_next_period();
- 638               	.LM35:
- 639 01a4 0E94 0000 		call nrk_wait_until_next_period
- 101:main.c        **** 	}
- 641               	.LM36:
- 642 01a8 00C0      		rjmp .L10
- 650               	.Lscope2:
- 652               		.stabd	78,0,0
- 654               	.global	nrk_create_taskset
- 656               	nrk_create_taskset:
- 657               		.stabd	46,0,0
- 132:main.c        **** 
- 133:main.c        **** void
- 134:main.c        **** nrk_create_taskset()
- 135:main.c        **** {
- 659               	.LM37:
- 660               	.LFBB3:
- 661               	/* prologue: function */
- 662               	/* frame size = 0 */
- 663               	/* stack size = 0 */
- 664               	.L__stack_usage = 0
- 136:main.c        ****   TaskOne.task = Task_Observe_Noise_In_The_Room;
- 666               	.LM38:
- 667 01aa 80E0      		ldi r24,lo8(gs(Task_Observe_Noise_In_The_Room))
- 668 01ac 90E0      		ldi r25,hi8(gs(Task_Observe_Noise_In_The_Room))
- 669 01ae 9093 0000 		sts TaskOne+5+1,r25
- 670 01b2 8093 0000 		sts TaskOne+5,r24
- 137:main.c        ****   nrk_task_set_stk( &TaskOne, Stack1, NRK_APP_STACKSIZE);
- 672               	.LM39:
- 673 01b6 40E8      		ldi r20,lo8(-128)
- 674 01b8 50E0      		ldi r21,0
- 675 01ba 60E0      		ldi r22,lo8(Stack1)
- 676 01bc 70E0      		ldi r23,hi8(Stack1)
- 677 01be 80E0      		ldi r24,lo8(TaskOne)
- 678 01c0 90E0      		ldi r25,hi8(TaskOne)
- 679 01c2 0E94 0000 		call nrk_task_set_stk
- 138:main.c        ****   TaskOne.prio = 1;
- 681               	.LM40:
- 682 01c6 81E0      		ldi r24,lo8(1)
- 683 01c8 8093 0000 		sts TaskOne+8,r24
- 139:main.c        ****   TaskOne.FirstActivation = TRUE;
- 685               	.LM41:
- 686 01cc 8093 0000 		sts TaskOne+7,r24
- 140:main.c        ****   TaskOne.Type = BASIC_TASK;
- 688               	.LM42:
- 689 01d0 8093 0000 		sts TaskOne+9,r24
- 141:main.c        ****   TaskOne.SchType = PREEMPTIVE;
+ 126:main.c        **** 		rms = rawrms / window_size ;
+ 127:main.c        **** 		rms = sqrt(rms) ;
+ 128:main.c        **** 
+ 129:main.c        **** 		printf( "window no =%d", window_count);
+ 484               	.LM22:
+ 485 00e2 70E0      		ldi r23,lo8(.LC1)
+ 486 00e4 272E      		mov r2,r23
+ 487 00e6 70E0      		ldi r23,hi8(.LC1)
+ 488 00e8 372E      		mov r3,r23
+ 130:main.c        **** 		printf( " has rms value =%d\r\n",rms);
+ 490               	.LM23:
+ 491 00ea 00E0      		ldi r16,lo8(.LC2)
+ 492 00ec 10E0      		ldi r17,hi8(.LC2)
+ 493               	.LBE2:
+ 116:main.c        **** 	while(index + window_size <= size)
+ 495               	.LM24:
+ 496 00ee 00C0      		rjmp .L8
+ 497               	.L9:
+ 498               	.LBB5:
+ 499               	.LBB3:
+ 123:main.c        **** 			rawrms += audios[count] * audios[count] ;
+ 501               	.LM25:
+ 502 00f0 EE0F      		lsl r30
+ 503 00f2 FF1F      		rol r31
+ 504 00f4 EA0D      		add r30,r10
+ 505 00f6 FB1D      		adc r31,r11
+ 506 00f8 6081      		ld r22,Z
+ 507 00fa 7181      		ldd r23,Z+1
+ 508 00fc 669F      		mul r22,r22
+ 509 00fe F001      		movw r30,r0
+ 510 0100 679F      		mul r22,r23
+ 511 0102 F00D      		add r31,r0
+ 512 0104 F00D      		add r31,r0
+ 513 0106 1124      		clr r1
+ 514 0108 8E0F      		add r24,r30
+ 515 010a 9F1F      		adc r25,r31
+ 121:main.c        **** 		for(uint8_t count = index ; count < index + window_size ; count++ )
+ 517               	.LM26:
+ 518 010c 5F5F      		subi r21,lo8(-(1))
+ 519 010e 00C0      		rjmp .L10
+ 520               	.L11:
+ 521               	.LBE3:
+ 522               	.LBE5:
+ 116:main.c        **** 	while(index + window_size <= size)
+ 524               	.LM27:
+ 525 0110 592D      		mov r21,r9
+ 526 0112 80E0      		ldi r24,0
+ 527 0114 90E0      		ldi r25,0
+ 528               	.L10:
+ 529               	.LBB6:
+ 530               	.LBB4:
+ 121:main.c        **** 		for(uint8_t count = index ; count < index + window_size ; count++ )
+ 532               	.LM28:
+ 533 0116 E52F      		mov r30,r21
+ 534 0118 F0E0      		ldi r31,0
+ 535 011a E217      		cp r30,r18
+ 536 011c F307      		cpc r31,r19
+ 537 011e 04F0      		brlt .L9
+ 538               	.LBE4:
+ 126:main.c        **** 		rms = rawrms / window_size ;
+ 540               	.LM29:
+ 541 0120 B701      		movw r22,r14
+ 542 0122 0E94 0000 		call __udivmodhi4
+ 127:main.c        **** 		rms = sqrt(rms) ;
+ 544               	.LM30:
+ 545 0126 80E0      		ldi r24,0
+ 546 0128 90E0      		ldi r25,0
+ 547 012a 4983      		std Y+1,r20
+ 548 012c 0E94 0000 		call __floatunsisf
+ 549 0130 0E94 0000 		call sqrt
+ 550 0134 2B01      		movw r4,r22
+ 551 0136 3C01      		movw r6,r24
+ 129:main.c        **** 		printf( "window no =%d", window_count);
+ 553               	.LM31:
+ 554 0138 1F92      		push __zero_reg__
+ 555 013a 8F92      		push r8
+ 556 013c 3F92      		push r3
+ 557 013e 2F92      		push r2
+ 558 0140 0E94 0000 		call printf
+ 127:main.c        **** 		rms = sqrt(rms) ;
+ 560               	.LM32:
+ 561 0144 C301      		movw r24,r6
+ 562 0146 B201      		movw r22,r4
+ 563 0148 0E94 0000 		call __fixunssfsi
+ 565               	.LM33:
+ 566 014c 7F93      		push r23
+ 567 014e 6F93      		push r22
+ 568 0150 1F93      		push r17
+ 569 0152 0F93      		push r16
+ 570 0154 0E94 0000 		call printf
+ 131:main.c        **** 
+ 132:main.c        **** 		window_count++;
+ 572               	.LM34:
+ 573 0158 8394      		inc r8
+ 111:main.c        **** calculate_rms(uint16_t audios [], int8_t size, int8_t window_size)
+ 575               	.LM35:
+ 576 015a 4981      		ldd r20,Y+1
+ 577 015c 940E      		add r9,r20
+ 578 015e 0FB6      		in __tmp_reg__,__SREG__
+ 579 0160 F894      		cli
+ 580 0162 DEBF      		out __SP_H__,r29
+ 581 0164 0FBE      		out __SREG__,__tmp_reg__
+ 582 0166 CDBF      		out __SP_L__,r28
+ 583               	.L8:
+ 584               	.LBE6:
+ 116:main.c        **** 	while(index + window_size <= size)
+ 586               	.LM36:
+ 587 0168 9701      		movw r18,r14
+ 588 016a 290D      		add r18,r9
+ 589 016c 311D      		adc r19,__zero_reg__
+ 590 016e C216      		cp r12,r18
+ 591 0170 D306      		cpc r13,r19
+ 592 0172 04F4      		brge .L11
+ 133:main.c        **** 		index = index + window_size;
+ 134:main.c        **** 	}
+ 135:main.c        **** 
+ 136:main.c        **** 	return 0;
+ 137:main.c        **** }
+ 594               	.LM37:
+ 595 0174 80E0      		ldi r24,0
+ 596 0176 90E0      		ldi r25,0
+ 597               	/* epilogue start */
+ 598 0178 0F90      		pop __tmp_reg__
+ 599 017a DF91      		pop r29
+ 600 017c CF91      		pop r28
+ 601 017e 1F91      		pop r17
+ 602 0180 0F91      		pop r16
+ 603 0182 FF90      		pop r15
+ 604 0184 EF90      		pop r14
+ 605 0186 DF90      		pop r13
+ 606 0188 CF90      		pop r12
+ 607 018a BF90      		pop r11
+ 608 018c AF90      		pop r10
+ 609 018e 9F90      		pop r9
+ 610 0190 8F90      		pop r8
+ 611 0192 7F90      		pop r7
+ 612 0194 6F90      		pop r6
+ 613 0196 5F90      		pop r5
+ 614 0198 4F90      		pop r4
+ 615 019a 3F90      		pop r3
+ 616 019c 2F90      		pop r2
+ 617 019e 0895      		ret
+ 638               	.Lscope2:
+ 640               		.stabd	78,0,0
+ 641               		.section	.rodata.str1.1
+ 642               	.LC3:
+ 643 002f 5461 736B 		.string	"Task2 PID=%u\r\n"
+ 643      3220 5049 
+ 643      443D 2575 
+ 643      0D0A 00
+ 644               	.LC4:
+ 645 003e 2575 0D0A 		.string	"%u\r\n"
+ 645      00
+ 646               		.text
+ 648               	.global	Analyze_Audio_Data
+ 650               	Analyze_Audio_Data:
+ 651               		.stabd	46,0,0
+ 138:main.c        **** 
+ 139:main.c        **** void
+ 140:main.c        **** Analyze_Audio_Data()
+ 141:main.c        **** {
+ 653               	.LM38:
+ 654               	.LFBB3:
+ 655               	/* prologue: function */
+ 656               	/* frame size = 0 */
+ 657               	/* stack size = 0 */
+ 658               	.L__stack_usage = 0
+ 142:main.c        ****  int16_t cnt;
+ 143:main.c        ****   printf( "Task2 PID=%u\r\n",nrk_get_pid());
+ 660               	.LM39:
+ 661 01a0 0E94 0000 		call nrk_get_pid
+ 662 01a4 1F92      		push __zero_reg__
+ 663 01a6 8F93      		push r24
+ 664 01a8 80E0      		ldi r24,lo8(.LC3)
+ 665 01aa 90E0      		ldi r25,hi8(.LC3)
+ 666 01ac 9F93      		push r25
+ 667 01ae 8F93      		push r24
+ 668 01b0 0E94 0000 		call printf
+ 669 01b4 0F90      		pop __tmp_reg__
+ 670 01b6 0F90      		pop __tmp_reg__
+ 671 01b8 0F90      		pop __tmp_reg__
+ 672 01ba 0F90      		pop __tmp_reg__
+ 673               	.LBB7:
+ 144:main.c        ****   cnt=0;
+ 145:main.c        ****   while(1) {
+ 146:main.c        **** 
+ 147:main.c        ****   	nrk_led_clr(BLUE_LED);
+ 148:main.c        ****   	nrk_led_clr(RED_LED);
+ 149:main.c        **** 	nrk_led_toggle(BLUE_LED);
+ 150:main.c        **** 	// printf( "Task2 signed cnt=%d\r\n",cnt );
+ 151:main.c        ****   	printf( "%u\r\n", 2);
+ 675               	.LM40:
+ 676 01bc 12E0      		ldi r17,lo8(2)
+ 677 01be C0E0      		ldi r28,lo8(.LC4)
+ 678 01c0 D0E0      		ldi r29,hi8(.LC4)
+ 679               	.L13:
+ 147:main.c        ****   	nrk_led_clr(BLUE_LED);
+ 681               	.LM41:
+ 682 01c2 83E0      		ldi r24,lo8(3)
+ 683 01c4 90E0      		ldi r25,0
+ 684 01c6 0E94 0000 		call nrk_led_clr
+ 148:main.c        ****   	nrk_led_clr(RED_LED);
+ 686               	.LM42:
+ 687 01ca 80E0      		ldi r24,0
+ 688 01cc 90E0      		ldi r25,0
+ 689 01ce 0E94 0000 		call nrk_led_clr
+ 149:main.c        **** 	nrk_led_toggle(BLUE_LED);
  691               	.LM43:
- 692 01d4 8093 0000 		sts TaskOne+10,r24
- 142:main.c        ****   TaskOne.period.secs = 0;
- 694               	.LM44:
- 695 01d8 1092 0000 		sts TaskOne+11,__zero_reg__
- 696 01dc 1092 0000 		sts TaskOne+11+1,__zero_reg__
- 697 01e0 1092 0000 		sts TaskOne+11+2,__zero_reg__
- 698 01e4 1092 0000 		sts TaskOne+11+3,__zero_reg__
- 143:main.c        ****   TaskOne.period.nano_secs = 500*NANOS_PER_MS; //*NANOS_PER_MS;
- 700               	.LM45:
- 701 01e8 80E0      		ldi r24,0
- 702 01ea 95E6      		ldi r25,lo8(101)
- 703 01ec ADEC      		ldi r26,lo8(-51)
- 704 01ee BDE1      		ldi r27,lo8(29)
- 705 01f0 8093 0000 		sts TaskOne+15,r24
- 706 01f4 9093 0000 		sts TaskOne+15+1,r25
- 707 01f8 A093 0000 		sts TaskOne+15+2,r26
- 708 01fc B093 0000 		sts TaskOne+15+3,r27
- 144:main.c        ****   TaskOne.cpu_reserve.secs = 0;
+ 692 01d2 83E0      		ldi r24,lo8(3)
+ 693 01d4 90E0      		ldi r25,0
+ 694 01d6 0E94 0000 		call nrk_led_toggle
+ 696               	.LM44:
+ 697 01da 1F92      		push __zero_reg__
+ 698 01dc 1F93      		push r17
+ 699 01de DF93      		push r29
+ 700 01e0 CF93      		push r28
+ 701 01e2 0E94 0000 		call printf
+ 152:main.c        **** 
+ 153:main.c        ****   	uint16_t rms = calculate_rms(audio_data, audio_data_size, 10);
+ 703               	.LM45:
+ 704 01e6 4AE0      		ldi r20,lo8(10)
+ 705 01e8 6091 0000 		lds r22,audio_data_size
+ 706 01ec 8091 0000 		lds r24,audio_data
+ 707 01f0 9091 0000 		lds r25,audio_data+1
+ 708 01f4 0E94 0000 		call calculate_rms
+ 154:main.c        **** 	//nrk_stats_display_pid(nrk_get_pid());
+ 155:main.c        **** 	nrk_wait_until_next_period();
  710               	.LM46:
- 711 0200 1092 0000 		sts TaskOne+19,__zero_reg__
- 712 0204 1092 0000 		sts TaskOne+19+1,__zero_reg__
- 713 0208 1092 0000 		sts TaskOne+19+2,__zero_reg__
- 714 020c 1092 0000 		sts TaskOne+19+3,__zero_reg__
- 145:main.c        ****   TaskOne.cpu_reserve.nano_secs = 100*NANOS_PER_MS;
- 716               	.LM47:
- 717 0210 80E0      		ldi r24,0
- 718 0212 91EE      		ldi r25,lo8(-31)
- 719 0214 A5EF      		ldi r26,lo8(-11)
- 720 0216 B5E0      		ldi r27,lo8(5)
- 721 0218 8093 0000 		sts TaskOne+23,r24
- 722 021c 9093 0000 		sts TaskOne+23+1,r25
- 723 0220 A093 0000 		sts TaskOne+23+2,r26
- 724 0224 B093 0000 		sts TaskOne+23+3,r27
- 146:main.c        ****   TaskOne.offset.secs = 0;
- 726               	.LM48:
- 727 0228 1092 0000 		sts TaskOne+27,__zero_reg__
- 728 022c 1092 0000 		sts TaskOne+27+1,__zero_reg__
- 729 0230 1092 0000 		sts TaskOne+27+2,__zero_reg__
- 730 0234 1092 0000 		sts TaskOne+27+3,__zero_reg__
- 147:main.c        ****   TaskOne.offset.nano_secs= 0;
- 732               	.LM49:
- 733 0238 1092 0000 		sts TaskOne+31,__zero_reg__
- 734 023c 1092 0000 		sts TaskOne+31+1,__zero_reg__
- 735 0240 1092 0000 		sts TaskOne+31+2,__zero_reg__
- 736 0244 1092 0000 		sts TaskOne+31+3,__zero_reg__
- 148:main.c        ****   nrk_activate_task (&TaskOne);
- 738               	.LM50:
- 739 0248 80E0      		ldi r24,lo8(TaskOne)
- 740 024a 90E0      		ldi r25,hi8(TaskOne)
- 741 024c 0C94 0000 		jmp nrk_activate_task
- 743               	.Lscope3:
- 745               		.stabd	78,0,0
- 747               	.global	nrk_register_drivers
- 749               	nrk_register_drivers:
- 750               		.stabd	46,0,0
- 149:main.c        **** 
- 150:main.c        **** }
- 151:main.c        **** 
- 152:main.c        **** void nrk_register_drivers()
- 153:main.c        **** {
- 752               	.LM51:
- 753               	.LFBB4:
- 754               	/* prologue: function */
- 755               	/* frame size = 0 */
- 756               	/* stack size = 0 */
- 757               	.L__stack_usage = 0
- 154:main.c        **** int8_t val;
- 155:main.c        **** 
- 156:main.c        **** // Register the Basic FireFly Sensor device driver
- 157:main.c        **** // Make sure to add: 
- 158:main.c        **** //     #define NRK_MAX_DRIVER_CNT  
- 159:main.c        **** //     in nrk_cfg.h
- 160:main.c        **** // Make sure to add: 
- 161:main.c        **** //     SRC += $(ROOT_DIR)/src/drivers/platform/$(PLATFORM_TYPE)/source/ff_basic_sensor.c
- 162:main.c        **** //     in makefile
- 163:main.c        **** val=nrk_register_driver( &dev_manager_ff3_sensors,FIREFLY_3_SENSOR_BASIC);
- 759               	.LM52:
- 760 0250 63E0      		ldi r22,lo8(3)
- 761 0252 80E0      		ldi r24,lo8(gs(dev_manager_ff3_sensors))
- 762 0254 90E0      		ldi r25,hi8(gs(dev_manager_ff3_sensors))
- 763 0256 0E94 0000 		call nrk_register_driver
- 164:main.c        **** if(val==NRK_ERROR) nrk_kprintf( PSTR("Failed to load my ADC driver\r\n") );
- 765               	.LM53:
- 766 025a 8F3F      		cpi r24,lo8(-1)
- 767 025c 01F4      		brne .L12
- 769               	.LM54:
- 770 025e 80E0      		ldi r24,lo8(__c.3184)
- 771 0260 90E0      		ldi r25,hi8(__c.3184)
- 772 0262 0C94 0000 		jmp nrk_kprintf
- 773               	.L12:
- 774 0266 0895      		ret
- 776               	.Lscope4:
- 778               		.stabd	78,0,0
- 779               		.section	.rodata.str1.1
- 780               	.LC3:
- 781 002f 7374 6172 		.string	"starting...\r"
- 781      7469 6E67 
- 781      2E2E 2E0D 
- 781      00
- 782               		.section	.text.startup,"ax",@progbits
- 784               	.global	main
- 786               	main:
- 787               		.stabd	46,0,0
-  51:main.c        **** {
- 789               	.LM55:
- 790               	.LFBB5:
- 791               	/* prologue: function */
- 792               	/* frame size = 0 */
- 793               	/* stack size = 0 */
- 794               	.L__stack_usage = 0
-  53:main.c        ****   nrk_setup_ports();
- 796               	.LM56:
- 797 0000 0E94 0000 		call nrk_setup_ports
-  54:main.c        ****   nrk_setup_uart(UART_BAUDRATE_115K2);
- 799               	.LM57:
- 800 0004 80E1      		ldi r24,lo8(16)
- 801 0006 90E0      		ldi r25,0
- 802 0008 0E94 0000 		call nrk_setup_uart
-  57:main.c        ****   printf( PSTR("starting...\r\n") );
+ 711 01f8 0E94 0000 		call nrk_wait_until_next_period
+ 712 01fc 0F90      		pop __tmp_reg__
+ 713 01fe 0F90      		pop __tmp_reg__
+ 714 0200 0F90      		pop __tmp_reg__
+ 715 0202 0F90      		pop __tmp_reg__
+ 716 0204 00C0      		rjmp .L13
+ 717               	.LBE7:
+ 719               	.Lscope3:
+ 721               		.stabd	78,0,0
+ 723               	.global	nrk_create_taskset
+ 725               	nrk_create_taskset:
+ 726               		.stabd	46,0,0
+ 156:main.c        **** 	cnt--;
+ 157:main.c        **** 	}
+ 158:main.c        **** }
+ 159:main.c        **** 
+ 160:main.c        **** void
+ 161:main.c        **** nrk_create_taskset()
+ 162:main.c        **** {
+ 728               	.LM47:
+ 729               	.LFBB4:
+ 730 0206 CF92      		push r12
+ 731 0208 DF92      		push r13
+ 732 020a EF92      		push r14
+ 733 020c FF92      		push r15
+ 734 020e CF93      		push r28
+ 735               	/* prologue: function */
+ 736               	/* frame size = 0 */
+ 737               	/* stack size = 5 */
+ 738               	.L__stack_usage = 5
+ 163:main.c        ****  nrk_task_set_entry_function( &TaskOne, Collect_Audio_Data);
+ 740               	.LM48:
+ 741 0210 60E0      		ldi r22,lo8(gs(Collect_Audio_Data))
+ 742 0212 70E0      		ldi r23,hi8(gs(Collect_Audio_Data))
+ 743 0214 80E0      		ldi r24,lo8(TaskOne)
+ 744 0216 90E0      		ldi r25,hi8(TaskOne)
+ 745 0218 0E94 0000 		call nrk_task_set_entry_function
+ 164:main.c        ****   nrk_task_set_stk( &TaskOne, Stack1, NRK_APP_STACKSIZE);
+ 747               	.LM49:
+ 748 021c 40E8      		ldi r20,lo8(-128)
+ 749 021e 50E0      		ldi r21,0
+ 750 0220 60E0      		ldi r22,lo8(Stack1)
+ 751 0222 70E0      		ldi r23,hi8(Stack1)
+ 752 0224 80E0      		ldi r24,lo8(TaskOne)
+ 753 0226 90E0      		ldi r25,hi8(TaskOne)
+ 754 0228 0E94 0000 		call nrk_task_set_stk
+ 165:main.c        ****   // TaskOne.task = Collect_Audio_Data;
+ 166:main.c        ****   nrk_task_set_stk( &TaskOne, Stack1, NRK_APP_STACKSIZE);
+ 756               	.LM50:
+ 757 022c 40E8      		ldi r20,lo8(-128)
+ 758 022e 50E0      		ldi r21,0
+ 759 0230 60E0      		ldi r22,lo8(Stack1)
+ 760 0232 70E0      		ldi r23,hi8(Stack1)
+ 761 0234 80E0      		ldi r24,lo8(TaskOne)
+ 762 0236 90E0      		ldi r25,hi8(TaskOne)
+ 763 0238 0E94 0000 		call nrk_task_set_stk
+ 167:main.c        ****   TaskOne.prio = 1;
+ 765               	.LM51:
+ 766 023c C1E0      		ldi r28,lo8(1)
+ 767 023e C093 0000 		sts TaskOne+8,r28
+ 168:main.c        ****   TaskOne.FirstActivation = TRUE;
+ 769               	.LM52:
+ 770 0242 C093 0000 		sts TaskOne+7,r28
+ 169:main.c        ****   TaskOne.Type = BASIC_TASK;
+ 772               	.LM53:
+ 773 0246 C093 0000 		sts TaskOne+9,r28
+ 170:main.c        ****   TaskOne.SchType = PREEMPTIVE;
+ 775               	.LM54:
+ 776 024a C093 0000 		sts TaskOne+10,r28
+ 171:main.c        ****   TaskOne.period.secs = 0;
+ 778               	.LM55:
+ 779 024e 1092 0000 		sts TaskOne+11,__zero_reg__
+ 780 0252 1092 0000 		sts TaskOne+11+1,__zero_reg__
+ 781 0256 1092 0000 		sts TaskOne+11+2,__zero_reg__
+ 782 025a 1092 0000 		sts TaskOne+11+3,__zero_reg__
+ 172:main.c        ****   TaskOne.period.nano_secs = 2*NANOS_PER_MS; //*NANOS_PER_MS;
+ 784               	.LM56:
+ 785 025e 80E8      		ldi r24,lo8(-128)
+ 786 0260 94E8      		ldi r25,lo8(-124)
+ 787 0262 AEE1      		ldi r26,lo8(30)
+ 788 0264 B0E0      		ldi r27,0
+ 789 0266 8093 0000 		sts TaskOne+15,r24
+ 790 026a 9093 0000 		sts TaskOne+15+1,r25
+ 791 026e A093 0000 		sts TaskOne+15+2,r26
+ 792 0272 B093 0000 		sts TaskOne+15+3,r27
+ 173:main.c        ****   TaskOne.cpu_reserve.secs = 1;
+ 794               	.LM57:
+ 795 0276 81E0      		ldi r24,lo8(1)
+ 796 0278 90E0      		ldi r25,0
+ 797 027a A0E0      		ldi r26,0
+ 798 027c B0E0      		ldi r27,0
+ 799 027e 8093 0000 		sts TaskOne+19,r24
+ 800 0282 9093 0000 		sts TaskOne+19+1,r25
+ 801 0286 A093 0000 		sts TaskOne+19+2,r26
+ 802 028a B093 0000 		sts TaskOne+19+3,r27
+ 174:main.c        ****   TaskOne.cpu_reserve.nano_secs = 100*NANOS_PER_MS;
  804               	.LM58:
- 805 000c 80E0      		ldi r24,lo8(.LC3)
- 806 000e 90E0      		ldi r25,hi8(.LC3)
- 807 0010 0E94 0000 		call puts
-  59:main.c        ****   nrk_init();
- 809               	.LM59:
- 810 0014 0E94 0000 		call nrk_init
-  60:main.c        ****   nrk_time_set(0,0);
- 812               	.LM60:
- 813 0018 20E0      		ldi r18,0
- 814 001a 30E0      		ldi r19,0
- 815 001c A901      		movw r20,r18
- 816 001e 60E0      		ldi r22,0
- 817 0020 70E0      		ldi r23,0
- 818 0022 CB01      		movw r24,r22
- 819 0024 0E94 0000 		call nrk_time_set
-  62:main.c        ****   nrk_register_drivers();
- 821               	.LM61:
- 822 0028 0E94 0000 		call nrk_register_drivers
-  63:main.c        ****   nrk_create_taskset ();
- 824               	.LM62:
- 825 002c 0E94 0000 		call nrk_create_taskset
-  64:main.c        ****   nrk_start();
- 827               	.LM63:
- 828 0030 0E94 0000 		call nrk_start
-  67:main.c        **** }
- 830               	.LM64:
- 831 0034 80E0      		ldi r24,0
- 832 0036 90E0      		ldi r25,0
- 833 0038 0895      		ret
- 835               	.Lscope5:
- 837               		.stabd	78,0,0
- 838               		.comm	TaskOne,35,1
- 839               		.comm	Stack1,128,1
- 840               		.comm	app_timer0_prescale,1,1
- 841               		.comm	app_timer0_callback,2,1
- 842               		.comm	_nrk_time_trigger,1,1
- 843               		.comm	_nrk_prev_timer_val,1,1
- 844               		.comm	error_num,1,1
- 845               		.comm	error_task,1,1
- 846               		.comm	nrk_kernel_stk_ptr,2,1
- 847               		.comm	nrk_idle_task_stk,128,1
- 848               		.comm	_nrk_signal_list,4,1
- 849               		.section	.progmem.data,"a",@progbits
- 852               	__c.3158:
- 853 0000 4661 696C 		.string	"Failed to open sensor driver\r\n"
- 853      6564 2074 
- 853      6F20 6F70 
- 853      656E 2073 
- 853      656E 736F 
- 856               	__c.3184:
- 857 001f 4661 696C 		.string	"Failed to load my ADC driver\r\n"
- 857      6564 2074 
- 857      6F20 6C6F 
- 857      6164 206D 
- 857      7920 4144 
- 869               		.text
- 871               	.Letext0:
- 872               		.ident	"GCC: (GNU) 4.7.2"
- 873               	.global __do_copy_data
- 874               	.global __do_clear_bss
+ 805 028e C12C      		mov r12,__zero_reg__
+ 806 0290 E1EE      		ldi r30,lo8(-31)
+ 807 0292 DE2E      		mov r13,r30
+ 808 0294 E5EF      		ldi r30,lo8(-11)
+ 809 0296 EE2E      		mov r14,r30
+ 810 0298 E5E0      		ldi r30,lo8(5)
+ 811 029a FE2E      		mov r15,r30
+ 812 029c C092 0000 		sts TaskOne+23,r12
+ 813 02a0 D092 0000 		sts TaskOne+23+1,r13
+ 814 02a4 E092 0000 		sts TaskOne+23+2,r14
+ 815 02a8 F092 0000 		sts TaskOne+23+3,r15
+ 175:main.c        ****   TaskOne.offset.secs = 0;
+ 817               	.LM59:
+ 818 02ac 1092 0000 		sts TaskOne+27,__zero_reg__
+ 819 02b0 1092 0000 		sts TaskOne+27+1,__zero_reg__
+ 820 02b4 1092 0000 		sts TaskOne+27+2,__zero_reg__
+ 821 02b8 1092 0000 		sts TaskOne+27+3,__zero_reg__
+ 176:main.c        ****   TaskOne.offset.nano_secs= 0;
+ 823               	.LM60:
+ 824 02bc 1092 0000 		sts TaskOne+31,__zero_reg__
+ 825 02c0 1092 0000 		sts TaskOne+31+1,__zero_reg__
+ 826 02c4 1092 0000 		sts TaskOne+31+2,__zero_reg__
+ 827 02c8 1092 0000 		sts TaskOne+31+3,__zero_reg__
+ 177:main.c        ****   nrk_activate_task (&TaskOne);
+ 829               	.LM61:
+ 830 02cc 80E0      		ldi r24,lo8(TaskOne)
+ 831 02ce 90E0      		ldi r25,hi8(TaskOne)
+ 832 02d0 0E94 0000 		call nrk_activate_task
+ 178:main.c        **** 
+ 179:main.c        ****   nrk_task_set_entry_function( &TaskTwo, Analyze_Audio_Data);
+ 834               	.LM62:
+ 835 02d4 60E0      		ldi r22,lo8(gs(Analyze_Audio_Data))
+ 836 02d6 70E0      		ldi r23,hi8(gs(Analyze_Audio_Data))
+ 837 02d8 80E0      		ldi r24,lo8(TaskTwo)
+ 838 02da 90E0      		ldi r25,hi8(TaskTwo)
+ 839 02dc 0E94 0000 		call nrk_task_set_entry_function
+ 180:main.c        ****   nrk_task_set_stk( &TaskTwo, Stack2, NRK_APP_STACKSIZE);
+ 841               	.LM63:
+ 842 02e0 40E8      		ldi r20,lo8(-128)
+ 843 02e2 50E0      		ldi r21,0
+ 844 02e4 60E0      		ldi r22,lo8(Stack2)
+ 845 02e6 70E0      		ldi r23,hi8(Stack2)
+ 846 02e8 80E0      		ldi r24,lo8(TaskTwo)
+ 847 02ea 90E0      		ldi r25,hi8(TaskTwo)
+ 848 02ec 0E94 0000 		call nrk_task_set_stk
+ 181:main.c        ****   TaskTwo.prio = 2;
+ 850               	.LM64:
+ 851 02f0 82E0      		ldi r24,lo8(2)
+ 852 02f2 8093 0000 		sts TaskTwo+8,r24
+ 182:main.c        ****   TaskTwo.FirstActivation = TRUE;
+ 854               	.LM65:
+ 855 02f6 C093 0000 		sts TaskTwo+7,r28
+ 183:main.c        ****   TaskTwo.Type = BASIC_TASK;
+ 857               	.LM66:
+ 858 02fa C093 0000 		sts TaskTwo+9,r28
+ 184:main.c        ****   TaskTwo.SchType = PREEMPTIVE;
+ 860               	.LM67:
+ 861 02fe C093 0000 		sts TaskTwo+10,r28
+ 185:main.c        ****   TaskTwo.period.secs = 0;
+ 863               	.LM68:
+ 864 0302 1092 0000 		sts TaskTwo+11,__zero_reg__
+ 865 0306 1092 0000 		sts TaskTwo+11+1,__zero_reg__
+ 866 030a 1092 0000 		sts TaskTwo+11+2,__zero_reg__
+ 867 030e 1092 0000 		sts TaskTwo+11+3,__zero_reg__
+ 186:main.c        ****   TaskTwo.period.nano_secs = 2500*NANOS_PER_MS;
+ 869               	.LM69:
+ 870 0312 80E0      		ldi r24,0
+ 871 0314 99EF      		ldi r25,lo8(-7)
+ 872 0316 A2E0      		ldi r26,lo8(2)
+ 873 0318 B5E9      		ldi r27,lo8(-107)
+ 874 031a 8093 0000 		sts TaskTwo+15,r24
+ 875 031e 9093 0000 		sts TaskTwo+15+1,r25
+ 876 0322 A093 0000 		sts TaskTwo+15+2,r26
+ 877 0326 B093 0000 		sts TaskTwo+15+3,r27
+ 187:main.c        ****   TaskTwo.cpu_reserve.secs = 0;
+ 879               	.LM70:
+ 880 032a 1092 0000 		sts TaskTwo+19,__zero_reg__
+ 881 032e 1092 0000 		sts TaskTwo+19+1,__zero_reg__
+ 882 0332 1092 0000 		sts TaskTwo+19+2,__zero_reg__
+ 883 0336 1092 0000 		sts TaskTwo+19+3,__zero_reg__
+ 188:main.c        ****   TaskTwo.cpu_reserve.nano_secs = 100*NANOS_PER_MS;
+ 885               	.LM71:
+ 886 033a C092 0000 		sts TaskTwo+23,r12
+ 887 033e D092 0000 		sts TaskTwo+23+1,r13
+ 888 0342 E092 0000 		sts TaskTwo+23+2,r14
+ 889 0346 F092 0000 		sts TaskTwo+23+3,r15
+ 189:main.c        ****   TaskTwo.offset.secs = 0;
+ 891               	.LM72:
+ 892 034a 1092 0000 		sts TaskTwo+27,__zero_reg__
+ 893 034e 1092 0000 		sts TaskTwo+27+1,__zero_reg__
+ 894 0352 1092 0000 		sts TaskTwo+27+2,__zero_reg__
+ 895 0356 1092 0000 		sts TaskTwo+27+3,__zero_reg__
+ 190:main.c        ****   TaskTwo.offset.nano_secs= 0;
+ 897               	.LM73:
+ 898 035a 1092 0000 		sts TaskTwo+31,__zero_reg__
+ 899 035e 1092 0000 		sts TaskTwo+31+1,__zero_reg__
+ 900 0362 1092 0000 		sts TaskTwo+31+2,__zero_reg__
+ 901 0366 1092 0000 		sts TaskTwo+31+3,__zero_reg__
+ 191:main.c        ****   nrk_activate_task (&TaskTwo);
+ 903               	.LM74:
+ 904 036a 80E0      		ldi r24,lo8(TaskTwo)
+ 905 036c 90E0      		ldi r25,hi8(TaskTwo)
+ 906               	/* epilogue start */
+ 192:main.c        **** 
+ 193:main.c        **** }
+ 908               	.LM75:
+ 909 036e CF91      		pop r28
+ 910 0370 FF90      		pop r15
+ 911 0372 EF90      		pop r14
+ 912 0374 DF90      		pop r13
+ 913 0376 CF90      		pop r12
+ 191:main.c        ****   nrk_activate_task (&TaskTwo);
+ 915               	.LM76:
+ 916 0378 0C94 0000 		jmp nrk_activate_task
+ 918               	.Lscope4:
+ 920               		.stabd	78,0,0
+ 922               	.global	nrk_register_drivers
+ 924               	nrk_register_drivers:
+ 925               		.stabd	46,0,0
+ 194:main.c        **** 
+ 195:main.c        **** void nrk_register_drivers()
+ 196:main.c        **** {
+ 927               	.LM77:
+ 928               	.LFBB5:
+ 929               	/* prologue: function */
+ 930               	/* frame size = 0 */
+ 931               	/* stack size = 0 */
+ 932               	.L__stack_usage = 0
+ 197:main.c        **** int8_t val;
+ 198:main.c        **** 
+ 199:main.c        **** // Register the Basic FireFly Sensor device driver
+ 200:main.c        **** // Make sure to add: 
+ 201:main.c        **** //     #define NRK_MAX_DRIVER_CNT  
+ 202:main.c        **** //     in nrk_cfg.h
+ 203:main.c        **** // Make sure to add: 
+ 204:main.c        **** //     SRC += $(ROOT_DIR)/src/drivers/platform/$(PLATFORM_TYPE)/source/ff_basic_sensor.c
+ 205:main.c        **** //     in makefile
+ 206:main.c        **** val=nrk_register_driver( &dev_manager_ff3_sensors,FIREFLY_3_SENSOR_BASIC);
+ 934               	.LM78:
+ 935 037c 63E0      		ldi r22,lo8(3)
+ 936 037e 80E0      		ldi r24,lo8(gs(dev_manager_ff3_sensors))
+ 937 0380 90E0      		ldi r25,hi8(gs(dev_manager_ff3_sensors))
+ 938 0382 0E94 0000 		call nrk_register_driver
+ 207:main.c        **** if(val==NRK_ERROR) nrk_kprintf( PSTR("Failed to load my ADC driver\r\n") );
+ 940               	.LM79:
+ 941 0386 8F3F      		cpi r24,lo8(-1)
+ 942 0388 01F4      		brne .L15
+ 944               	.LM80:
+ 945 038a 80E0      		ldi r24,lo8(__c.3192)
+ 946 038c 90E0      		ldi r25,hi8(__c.3192)
+ 947 038e 0C94 0000 		jmp nrk_kprintf
+ 948               	.L15:
+ 949 0392 0895      		ret
+ 951               	.Lscope5:
+ 953               		.stabd	78,0,0
+ 954               		.section	.rodata.str1.1
+ 955               	.LC5:
+ 956 0043 7374 6172 		.string	"starting...\r"
+ 956      7469 6E67 
+ 956      2E2E 2E0D 
+ 956      00
+ 957               		.section	.text.startup,"ax",@progbits
+ 959               	.global	main
+ 961               	main:
+ 962               		.stabd	46,0,0
+  56:main.c        **** {
+ 964               	.LM81:
+ 965               	.LFBB6:
+ 966               	/* prologue: function */
+ 967               	/* frame size = 0 */
+ 968               	/* stack size = 0 */
+ 969               	.L__stack_usage = 0
+  58:main.c        ****   nrk_setup_ports();
+ 971               	.LM82:
+ 972 0000 0E94 0000 		call nrk_setup_ports
+  59:main.c        ****   nrk_setup_uart(UART_BAUDRATE_115K2);
+ 974               	.LM83:
+ 975 0004 80E1      		ldi r24,lo8(16)
+ 976 0006 90E0      		ldi r25,0
+ 977 0008 0E94 0000 		call nrk_setup_uart
+  62:main.c        ****   printf( PSTR("starting...\r\n") );
+ 979               	.LM84:
+ 980 000c 80E0      		ldi r24,lo8(.LC5)
+ 981 000e 90E0      		ldi r25,hi8(.LC5)
+ 982 0010 0E94 0000 		call puts
+  63:main.c        ****   audio_data_size = 30;
+ 984               	.LM85:
+ 985 0014 8EE1      		ldi r24,lo8(30)
+ 986 0016 8093 0000 		sts audio_data_size,r24
+  64:main.c        ****   audio_data = malloc(audio_data_size * (sizeof audio_data[0]));
+ 988               	.LM86:
+ 989 001a 8CE3      		ldi r24,lo8(60)
+ 990 001c 90E0      		ldi r25,0
+ 991 001e 0E94 0000 		call malloc
+ 992 0022 8093 0000 		sts audio_data,r24
+ 993 0026 9093 0000 		sts audio_data+1,r25
+  66:main.c        ****   nrk_init();
+ 995               	.LM87:
+ 996 002a 0E94 0000 		call nrk_init
+  67:main.c        ****   nrk_time_set(0,0);
+ 998               	.LM88:
+ 999 002e 20E0      		ldi r18,0
+ 1000 0030 30E0      		ldi r19,0
+ 1001 0032 A901      		movw r20,r18
+ 1002 0034 60E0      		ldi r22,0
+ 1003 0036 70E0      		ldi r23,0
+ 1004 0038 CB01      		movw r24,r22
+ 1005 003a 0E94 0000 		call nrk_time_set
+  69:main.c        ****   nrk_register_drivers();
+ 1007               	.LM89:
+ 1008 003e 0E94 0000 		call nrk_register_drivers
+  70:main.c        ****   nrk_create_taskset ();
+ 1010               	.LM90:
+ 1011 0042 0E94 0000 		call nrk_create_taskset
+  71:main.c        ****   nrk_start();
+ 1013               	.LM91:
+ 1014 0046 0E94 0000 		call nrk_start
+  74:main.c        **** }
+ 1016               	.LM92:
+ 1017 004a 80E0      		ldi r24,0
+ 1018 004c 90E0      		ldi r25,0
+ 1019 004e 0895      		ret
+ 1021               	.Lscope6:
+ 1023               		.stabd	78,0,0
+ 1024               		.comm	audio_data_size,1,1
+ 1025               		.comm	audio_data,2,1
+ 1026               		.comm	TaskTwo,35,1
+ 1027               		.comm	TaskOne,35,1
+ 1028               		.comm	Stack2,128,1
+ 1029               		.comm	Stack1,128,1
+ 1030               		.comm	app_timer0_prescale,1,1
+ 1031               		.comm	app_timer0_callback,2,1
+ 1032               		.comm	_nrk_time_trigger,1,1
+ 1033               		.comm	_nrk_prev_timer_val,1,1
+ 1034               		.comm	error_num,1,1
+ 1035               		.comm	error_task,1,1
+ 1036               		.comm	nrk_kernel_stk_ptr,2,1
+ 1037               		.comm	nrk_idle_task_stk,128,1
+ 1038               		.comm	_nrk_signal_list,4,1
+ 1039               		.section	.progmem.data,"a",@progbits
+ 1042               	__c.3162:
+ 1043 0000 4661 696C 		.string	"Failed to open sensor driver\r\n"
+ 1043      6564 2074 
+ 1043      6F20 6F70 
+ 1043      656E 2073 
+ 1043      656E 736F 
+ 1046               	__c.3192:
+ 1047 001f 4661 696C 		.string	"Failed to load my ADC driver\r\n"
+ 1047      6564 2074 
+ 1047      6F20 6C6F 
+ 1047      6164 206D 
+ 1047      7920 4144 
+ 1063               		.text
+ 1065               	.Letext0:
+ 1066               		.ident	"GCC: (GNU) 4.7.2"
+ 1067               	.global __do_copy_data
+ 1068               	.global __do_clear_bss
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 main.c
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:2      *ABS*:000000000000003e __SP_H__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:3      *ABS*:000000000000003d __SP_L__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:4      *ABS*:000000000000003f __SREG__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:5      *ABS*:000000000000003b __RAMPZ__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:6      *ABS*:0000000000000000 __tmp_reg__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:7      *ABS*:0000000000000001 __zero_reg__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:305    .text:0000000000000000 calculate_rms
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:518    .text:00000000000000fe Task_Observe_Noise_In_The_Room
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:852    .progmem.data:0000000000000000 __c.3158
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:656    .text:00000000000001aa nrk_create_taskset
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:2      *ABS*:000000000000003e __SP_H__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:3      *ABS*:000000000000003d __SP_L__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:4      *ABS*:000000000000003f __SREG__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:5      *ABS*:000000000000003b __RAMPZ__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:6      *ABS*:0000000000000000 __tmp_reg__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:7      *ABS*:0000000000000001 __zero_reg__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:298    .text:0000000000000000 Collect_Audio_Data
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:1042   .progmem.data:0000000000000000 __c.3162
+                            *COM*:0000000000000002 audio_data
+                            *COM*:0000000000000001 audio_data_size
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:435    .text:00000000000000a2 calculate_rms
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:650    .text:00000000000001a0 Analyze_Audio_Data
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:725    .text:0000000000000206 nrk_create_taskset
                             *COM*:0000000000000023 TaskOne
                             *COM*:0000000000000080 Stack1
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:749    .text:0000000000000250 nrk_register_drivers
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:856    .progmem.data:000000000000001f __c.3184
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//cczbaNZX.s:786    .text.startup:0000000000000000 main
+                            *COM*:0000000000000023 TaskTwo
+                            *COM*:0000000000000080 Stack2
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:924    .text:000000000000037c nrk_register_drivers
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:1046   .progmem.data:000000000000001f __c.3192
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccgEeYL1.s:961    .text.startup:0000000000000000 main
                             *COM*:0000000000000001 app_timer0_prescale
                             *COM*:0000000000000002 app_timer0_callback
                             *COM*:0000000000000001 _nrk_time_trigger
@@ -713,17 +916,21 @@ DEFINED SYMBOLS
                             *COM*:0000000000000004 _nrk_signal_list
 
 UNDEFINED SYMBOLS
-__floatunsisf
-__fixunssfsi
-__udivmodhi4
-sqrt
-printf
 nrk_open
 nrk_kprintf
 nrk_set_status
 nrk_spin_wait_us
 nrk_read
+printf
+nrk_led_clr
+nrk_led_toggle
 nrk_wait_until_next_period
+__floatunsisf
+__fixunssfsi
+__udivmodhi4
+sqrt
+nrk_get_pid
+nrk_task_set_entry_function
 nrk_task_set_stk
 nrk_activate_task
 dev_manager_ff3_sensors
@@ -731,6 +938,7 @@ nrk_register_driver
 nrk_setup_ports
 nrk_setup_uart
 puts
+malloc
 nrk_init
 nrk_time_set
 nrk_start
