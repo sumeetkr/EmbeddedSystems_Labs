@@ -41,9 +41,9 @@ NRK_STK Stack2[NRK_APP_STACKSIZE];
 nrk_task_type TaskOne;
 nrk_task_type TaskTwo;
 
-void Collect_Audio_Data(void);
+void collect_Audio_Data(void);
 uint16_t calculate_rms(uint16_t audios [], int8_t size, int8_t window_size);
-void Analyze_Audio_Data(void);
+void analyze_Audio_Data(void);
 
 void nrk_create_taskset();
 void nrk_register_drivers();
@@ -75,7 +75,7 @@ main ()
 
 
 void 
-Collect_Audio_Data(){
+collect_Audio_Data(){
 
 int8_t fd, val, index;
 uint16_t buf;
@@ -107,37 +107,8 @@ if(fd==NRK_ERROR) nrk_kprintf(PSTR("Failed to open sensor driver\r\n"));
 	}
 }
 
-uint16_t
-calculate_rms(uint16_t audios [], int8_t size, int8_t window_size)
-{
-	uint8_t index = 0;
-	uint8_t window_count = 0;
-
-	while(index + window_size <= size)
-	{
-		uint16_t rawrms  =0;
-		uint16_t rms  = 0;
-
-		for(uint8_t count = index ; count < index + window_size ; count++ )
-		{
-			rawrms += audios[count] * audios[count] ;
-		}
-
-		rms = rawrms / window_size ;
-		rms = sqrt(rms) ;
-
-		printf( "window no =%d", window_count);
-		printf( " has rms value =%d\r\n",rms);
-
-		window_count++;
-		index = index + window_size;
-	}
-
-	return 0;
-}
-
 void
-Analyze_Audio_Data()
+analyze_Audio_Data()
 {
  int16_t cnt;
   printf( "Task2 PID=%u\r\n",nrk_get_pid());
@@ -146,7 +117,7 @@ Analyze_Audio_Data()
 
   	nrk_led_clr(BLUE_LED);
   	nrk_led_clr(RED_LED);
-	nrk_led_toggle(BLUE_LED);
+	  nrk_led_toggle(BLUE_LED);
 	// printf( "Task2 signed cnt=%d\r\n",cnt );
   	printf( "%u\r\n", 2);
 
@@ -160,7 +131,7 @@ Analyze_Audio_Data()
 void
 nrk_create_taskset()
 {
- nrk_task_set_entry_function( &TaskOne, Collect_Audio_Data);
+ nrk_task_set_entry_function( &TaskOne, collect_Audio_Data);
   nrk_task_set_stk( &TaskOne, Stack1, NRK_APP_STACKSIZE);
   nrk_task_set_stk( &TaskOne, Stack1, NRK_APP_STACKSIZE);
   TaskOne.prio = 1;
@@ -169,13 +140,13 @@ nrk_create_taskset()
   TaskOne.SchType = PREEMPTIVE;
   TaskOne.period.secs = 0;
   TaskOne.period.nano_secs = 2*NANOS_PER_MS; //*NANOS_PER_MS;
-  TaskOne.cpu_reserve.secs = 1;
-  TaskOne.cpu_reserve.nano_secs = 100*NANOS_PER_MS;
+  TaskOne.cpu_reserve.secs = 0;
+  TaskOne.cpu_reserve.nano_secs = 0;
   TaskOne.offset.secs = 0;
   TaskOne.offset.nano_secs= 0;
   nrk_activate_task (&TaskOne);
 
-  nrk_task_set_entry_function( &TaskTwo, Analyze_Audio_Data);
+  nrk_task_set_entry_function( &TaskTwo, analyze_Audio_Data);
   nrk_task_set_stk( &TaskTwo, Stack2, NRK_APP_STACKSIZE);
   TaskTwo.prio = 2;
   TaskTwo.FirstActivation = TRUE;
@@ -184,7 +155,7 @@ nrk_create_taskset()
   TaskTwo.period.secs = 0;
   TaskTwo.period.nano_secs = 2500*NANOS_PER_MS;
   TaskTwo.cpu_reserve.secs = 0;
-  TaskTwo.cpu_reserve.nano_secs = 100*NANOS_PER_MS;
+  TaskTwo.cpu_reserve.nano_secs = 0;
   TaskTwo.offset.secs = 0;
   TaskTwo.offset.nano_secs= 0;
   nrk_activate_task (&TaskTwo);
@@ -205,6 +176,35 @@ int8_t val;
 val=nrk_register_driver( &dev_manager_ff3_sensors,FIREFLY_3_SENSOR_BASIC);
 if(val==NRK_ERROR) nrk_kprintf( PSTR("Failed to load my ADC driver\r\n") );
 
+}
+
+uint16_t
+calculate_rms(uint16_t audios [], int8_t size, int8_t window_size)
+{
+  uint8_t index = 0;
+  uint8_t window_count = 0;
+
+  while(index + window_size <= size)
+  {
+    uint16_t rawrms  =0;
+    uint16_t rms  = 0;
+
+    for(uint8_t count = index ; count < index + window_size ; count++ )
+    {
+      rawrms += audios[count] * audios[count] ;
+    }
+
+    rms = rawrms / window_size ;
+    rms = sqrt(rms) ;
+
+    printf( "window no =%d", window_count);
+    printf( " has rms value =%d\r\n",rms);
+
+    window_count++;
+    index = index + window_size;
+  }
+
+  return 0;
 }
 
 

@@ -484,20 +484,20 @@
  661               	.global __do_clear_bss
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 main.c
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccVTKmuB.s:2      *ABS*:000000000000003e __SP_H__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccVTKmuB.s:3      *ABS*:000000000000003d __SP_L__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccVTKmuB.s:4      *ABS*:000000000000003f __SREG__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccVTKmuB.s:5      *ABS*:000000000000003b __RAMPZ__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccVTKmuB.s:6      *ABS*:0000000000000000 __tmp_reg__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccVTKmuB.s:7      *ABS*:0000000000000001 __zero_reg__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccVTKmuB.s:308    .text:0000000000000000 Task1
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccVTKmuB.s:639    .progmem.data:0000000000000000 __c.3153
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccVTKmuB.s:443    .text:00000000000000b0 nrk_create_taskset
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:2      *ABS*:000000000000003e __SP_H__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:3      *ABS*:000000000000003d __SP_L__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:4      *ABS*:000000000000003f __SREG__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:5      *ABS*:000000000000003b __RAMPZ__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:6      *ABS*:0000000000000000 __tmp_reg__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:7      *ABS*:0000000000000001 __zero_reg__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:308    .text:0000000000000000 Task1
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:639    .progmem.data:0000000000000000 __c.3153
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:443    .text:00000000000000b0 nrk_create_taskset
                             *COM*:0000000000000023 TaskOne
                             *COM*:0000000000000080 Stack1
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccVTKmuB.s:536    .text:0000000000000156 nrk_register_drivers
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccVTKmuB.s:643    .progmem.data:000000000000001f __c.3161
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccVTKmuB.s:573    .text.startup:0000000000000000 main
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:536    .text:0000000000000156 nrk_register_drivers
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:643    .progmem.data:000000000000001f __c.3161
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:573    .text.startup:0000000000000000 main
                             *COM*:0000000000000001 app_timer0_prescale
                             *COM*:0000000000000002 app_timer0_callback
                             *COM*:0000000000000001 _nrk_time_trigger
