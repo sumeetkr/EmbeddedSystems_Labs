@@ -76,6 +76,7 @@ main ()
 
 void 
 collect_Audio_Data(){
+printf( "Task PID=%u\r\n",nrk_get_pid());
 
 int8_t fd, val, index;
 uint16_t buf;
@@ -86,7 +87,7 @@ if(fd==NRK_ERROR) nrk_kprintf(PSTR("Failed to open sensor driver\r\n"));
 
 	while(1)
 	{
-		val=nrk_set_status(fd,SENSOR_SELECT,AUDIO_P2P);
+		val=nrk_set_status(fd,SENSOR_SELECT,AUDIO);
 		nrk_spin_wait_us(60000);
 		val=nrk_read(fd,&buf,2);
 		printf( " audio=%d\r\n",buf);
@@ -110,21 +111,21 @@ if(fd==NRK_ERROR) nrk_kprintf(PSTR("Failed to open sensor driver\r\n"));
 void
 analyze_Audio_Data()
 {
- int16_t cnt;
-  printf( "Task2 PID=%u\r\n",nrk_get_pid());
+  printf( "Task PID=%u\r\n",nrk_get_pid());
+  int16_t cnt;
   cnt=0;
   while(1) {
 
   	nrk_led_clr(BLUE_LED);
   	nrk_led_clr(RED_LED);
 	  nrk_led_toggle(BLUE_LED);
-	// printf( "Task2 signed cnt=%d\r\n",cnt );
-  	printf( "%u\r\n", 2);
+	  // printf( "Task2 signed cnt=%d\r\n",cnt );
+  	// printf( "Task Id =%u\r\n", 2);
 
   	uint16_t rms = calculate_rms(audio_data, audio_data_size, 10);
-	//nrk_stats_display_pid(nrk_get_pid());
-	nrk_wait_until_next_period();
-	cnt--;
+	  //nrk_stats_display_pid(nrk_get_pid());
+	  nrk_wait_until_next_period();
+	  cnt--;
 	}
 }
 
@@ -186,19 +187,20 @@ calculate_rms(uint16_t audios [], int8_t size, int8_t window_size)
 
   while(index + window_size <= size)
   {
-    uint16_t rawrms  =0;
-    uint16_t rms  = 0;
+    uint32_t rawrms  =0;
+    uint32_t rms  = 0;
 
     for(uint8_t count = index ; count < index + window_size ; count++ )
     {
-      rawrms += audios[count] * audios[count] ;
+      rawrms += (uint32_t)audios[count] * (uint32_t)audios[count];
     }
 
     rms = rawrms / window_size ;
     rms = sqrt(rms) ;
 
+    // No conversion needed as a =1 and b =0 in linear transformation
     printf( "window no =%d", window_count);
-    printf( " has rms value =%d\r\n",rms);
+    printf( " has rms value =%ld\r\n",rms);
 
     window_count++;
     index = index + window_size;

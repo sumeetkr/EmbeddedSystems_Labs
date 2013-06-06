@@ -9,36 +9,47 @@
   11               	.Ltext0:
  291               		.section	.rodata.str1.1,"aMS",@progbits,1
  292               	.LC0:
- 293 0000 4D79 206E 		.string	"My node's address is %d\r\n"
- 293      6F64 6527 
- 293      7320 6164 
- 293      6472 6573 
- 293      7320 6973 
+ 293 0000 6461 726B 		.string	"dark \r\n"
+ 293      200D 0A00 
  294               	.LC1:
- 295 001a 5461 736B 		.string	"Task1 PID=%d\r\n"
- 295      3120 5049 
- 295      443D 2564 
- 295      0D0A 00
+ 295 0008 6461 796C 		.string	"daylight \r\n"
+ 295      6967 6874 
+ 295      200D 0A00 
  296               	.LC2:
- 297 0029 2064 6172 		.string	" dark "
- 297      6B20 00
+ 297 0014 726F 6F6D 		.string	"room-light \r\n"
+ 297      2D6C 6967 
+ 297      6874 200D 
+ 297      0A00 
  298               	.LC3:
- 299 0030 2064 6179 		.string	" daylight "
- 299      6C69 6768 
- 299      7420 00
+ 299 0022 4D79 206E 		.string	"My node's address is %d\r\n"
+ 299      6F64 6527 
+ 299      7320 6164 
+ 299      6472 6573 
+ 299      7320 6973 
  300               	.LC4:
- 301 003b 2072 6F6F 		.string	" room-light "
- 301      6D2D 6C69 
- 301      6768 7420 
- 301      00
+ 301 003c 5461 736B 		.string	"Task1 PID=%d\r\n"
+ 301      3120 5049 
+ 301      443D 2564 
+ 301      0D0A 00
  302               	.LC5:
- 303 0048 206C 6967 		.string	" light=%d\r\n"
- 303      6874 3D25 
- 303      640D 0A00 
- 304               		.text
- 306               	.global	Task1
- 308               	Task1:
- 309               		.stabd	46,0,0
+ 303 004b 6C75 6D65 		.string	"lumens"
+ 303      6E73 00
+ 304               	.LC6:
+ 305 0052 2061 6D62 		.string	" ambient light value= %d%s"
+ 305      6965 6E74 
+ 305      206C 6967 
+ 305      6874 2076 
+ 305      616C 7565 
+ 306               	.LC7:
+ 307 006d 203A 206C 		.string	" : light type detected as %s\r\n"
+ 307      6967 6874 
+ 307      2074 7970 
+ 307      6520 6465 
+ 307      7465 6374 
+ 308               		.text
+ 310               	.global	Task1
+ 312               	Task1:
+ 313               		.stabd	46,0,0
    1:main.c        **** /******************************************************************************
    2:main.c        **** *  Nano-RK, a real-time operating system for sensor networks.
    3:main.c        **** *  Copyright (C) 2007, Real-Time and Multimedia Lab, Carnegie Mellon University
@@ -109,395 +120,427 @@
   68:main.c        **** 
   69:main.c        **** void Task1()
   70:main.c        **** {
- 311               	.LM0:
- 312               	.LFBB1:
- 313 0000 CF93      		push r28
- 314 0002 DF93      		push r29
- 315 0004 00D0      		rcall .
- 316 0006 CDB7      		in r28,__SP_L__
- 317 0008 DEB7      		in r29,__SP_H__
- 318               	/* prologue: function */
- 319               	/* frame size = 2 */
- 320               	/* stack size = 4 */
- 321               	.L__stack_usage = 4
+ 315               	.LM0:
+ 316               	.LFBB1:
+ 317 0000 CF93      		push r28
+ 318 0002 DF93      		push r29
+ 319 0004 00D0      		rcall .
+ 320 0006 CDB7      		in r28,__SP_L__
+ 321 0008 DEB7      		in r29,__SP_H__
+ 322               	/* prologue: function */
+ 323               	/* frame size = 2 */
+ 324               	/* stack size = 4 */
+ 325               	.L__stack_usage = 4
   71:main.c        **** uint16_t cnt;
   72:main.c        **** int8_t i,fd,val;
   73:main.c        **** uint16_t buf;
   74:main.c        **** uint64_t bbuf;
   75:main.c        **** 
   76:main.c        ****   printf( "My node's address is %d\r\n",NODE_ADDR );
- 323               	.LM1:
- 324 000a 1F92      		push __zero_reg__
- 325 000c 1F92      		push __zero_reg__
- 326 000e 80E0      		ldi r24,lo8(.LC0)
- 327 0010 90E0      		ldi r25,hi8(.LC0)
- 328 0012 9F93      		push r25
- 329 0014 8F93      		push r24
- 330 0016 0E94 0000 		call printf
+ 327               	.LM1:
+ 328 000a 1F92      		push __zero_reg__
+ 329 000c 1F92      		push __zero_reg__
+ 330 000e 80E0      		ldi r24,lo8(.LC3)
+ 331 0010 90E0      		ldi r25,hi8(.LC3)
+ 332 0012 9F93      		push r25
+ 333 0014 8F93      		push r24
+ 334 0016 0E94 0000 		call printf
   77:main.c        **** 
   78:main.c        ****   printf( "Task1 PID=%d\r\n",nrk_get_pid());
- 332               	.LM2:
- 333 001a 0E94 0000 		call nrk_get_pid
- 334 001e 1F92      		push __zero_reg__
- 335 0020 8F93      		push r24
- 336 0022 80E0      		ldi r24,lo8(.LC1)
- 337 0024 90E0      		ldi r25,hi8(.LC1)
- 338 0026 9F93      		push r25
- 339 0028 8F93      		push r24
- 340 002a 0E94 0000 		call printf
+ 336               	.LM2:
+ 337 001a 0E94 0000 		call nrk_get_pid
+ 338 001e 1F92      		push __zero_reg__
+ 339 0020 8F93      		push r24
+ 340 0022 80E0      		ldi r24,lo8(.LC4)
+ 341 0024 90E0      		ldi r25,hi8(.LC4)
+ 342 0026 9F93      		push r25
+ 343 0028 8F93      		push r24
+ 344 002a 0E94 0000 		call printf
   79:main.c        **** 
   80:main.c        ****   
   81:main.c        ****   	// Open ADC device as read 
   82:main.c        ****   	fd=nrk_open(FIREFLY_3_SENSOR_BASIC,READ);
- 342               	.LM3:
- 343 002e 65E0      		ldi r22,lo8(5)
- 344 0030 83E0      		ldi r24,lo8(3)
- 345 0032 0E94 0000 		call nrk_open
- 346 0036 F82E      		mov r15,r24
+ 346               	.LM3:
+ 347 002e 65E0      		ldi r22,lo8(5)
+ 348 0030 83E0      		ldi r24,lo8(3)
+ 349 0032 0E94 0000 		call nrk_open
+ 350 0036 782E      		mov r7,r24
   83:main.c        ****   	if(fd==NRK_ERROR) nrk_kprintf(PSTR("Failed to open sensor driver\r\n"));
- 348               	.LM4:
- 349 0038 0FB6      		in __tmp_reg__,__SREG__
- 350 003a F894      		cli
- 351 003c DEBF      		out __SP_H__,r29
- 352 003e 0FBE      		out __SREG__,__tmp_reg__
- 353 0040 CDBF      		out __SP_L__,r28
- 354 0042 9FEF      		ldi r25,lo8(-1)
- 355 0044 8913      		cpse r24,r25
- 356 0046 00C0      		rjmp .L6
- 358               	.LM5:
- 359 0048 80E0      		ldi r24,lo8(__c.3153)
- 360 004a 90E0      		ldi r25,hi8(__c.3153)
- 361 004c 0E94 0000 		call nrk_kprintf
- 362               	.L6:
+ 352               	.LM4:
+ 353 0038 0FB6      		in __tmp_reg__,__SREG__
+ 354 003a F894      		cli
+ 355 003c DEBF      		out __SP_H__,r29
+ 356 003e 0FBE      		out __SREG__,__tmp_reg__
+ 357 0040 CDBF      		out __SP_L__,r28
+ 358 0042 9FEF      		ldi r25,lo8(-1)
+ 359 0044 8913      		cpse r24,r25
+ 360 0046 00C0      		rjmp .L4
+ 362               	.LM5:
+ 363 0048 80E0      		ldi r24,lo8(__c.3153)
+ 364 004a 90E0      		ldi r25,hi8(__c.3153)
+ 365 004c 0E94 0000 		call nrk_kprintf
+ 366               	.L4:
+ 367               	.LBB2:
   84:main.c        **** 	cnt=0;
   85:main.c        ****   	while(1) {
   86:main.c        **** 		// Example of setting a sensor
   87:main.c        **** 		val=nrk_set_status(fd,SENSOR_SELECT,LIGHT);
   88:main.c        **** 		val=nrk_read(fd,&buf,2);
   89:main.c        **** 
-  90:main.c        **** 		if(buf > 1000){
-  91:main.c        **** 			printf( " dark \n");
-  92:main.c        **** 		}
-  93:main.c        **** 		else
-  94:main.c        **** 		{
-  95:main.c        **** 			if(buf < 700){
-  96:main.c        **** 				printf( " daylight \n");
-  97:main.c        **** 			}
-  98:main.c        **** 			else
-  99:main.c        **** 			{
- 100:main.c        **** 				printf( " room-light \n");
- 101:main.c        **** 			}
- 102:main.c        **** 		}
- 103:main.c        **** 
- 104:main.c        **** 		printf( " light=%d\r\n",buf);
- 364               	.LM6:
- 365 0050 00E0      		ldi r16,lo8(.LC5)
- 366 0052 10E0      		ldi r17,hi8(.LC5)
- 367               	.L7:
+  90:main.c        ****     char *light_type;
+  91:main.c        **** 
+  92:main.c        **** 		if(buf > 1000){
+  93:main.c        **** 			light_type= "dark \r\n";
+  94:main.c        **** 		}
+  95:main.c        **** 		else
+  96:main.c        **** 		{
+  97:main.c        **** 			if(buf < 600){
+  98:main.c        **** 				light_type= "daylight \r\n";
+  99:main.c        **** 			}
+ 100:main.c        **** 			else
+ 101:main.c        **** 			{
+ 102:main.c        **** 				light_type= "room-light \r\n";
+ 103:main.c        **** 			}
+ 104:main.c        **** 		}
+ 105:main.c        **** 
+ 106:main.c        ****     // a = -1, b= 1024 - linear transformation, lumens unit
+ 107:main.c        **** 		printf( " ambient light value= %d%s",-1*buf + 1024, "lumens");
+ 369               	.LM6:
+ 370 0050 80E0      		ldi r24,lo8(.LC5)
+ 371 0052 A82E      		mov r10,r24
+ 372 0054 80E0      		ldi r24,hi8(.LC5)
+ 373 0056 B82E      		mov r11,r24
+ 374 0058 812C      		mov r8,__zero_reg__
+ 375 005a 94E0      		ldi r25,lo8(4)
+ 376 005c 992E      		mov r9,r25
+ 377 005e 20E0      		ldi r18,lo8(.LC6)
+ 378 0060 C22E      		mov r12,r18
+ 379 0062 20E0      		ldi r18,hi8(.LC6)
+ 380 0064 D22E      		mov r13,r18
+ 108:main.c        ****     printf( " : light type detected as %s\r\n", light_type);
+ 382               	.LM7:
+ 383 0066 30E0      		ldi r19,lo8(.LC7)
+ 384 0068 E32E      		mov r14,r19
+ 385 006a 30E0      		ldi r19,hi8(.LC7)
+ 386 006c F32E      		mov r15,r19
+ 387               	.L7:
   87:main.c        **** 		val=nrk_set_status(fd,SENSOR_SELECT,LIGHT);
- 369               	.LM7:
- 370 0054 41E0      		ldi r20,lo8(1)
- 371 0056 61E0      		ldi r22,lo8(1)
- 372 0058 8F2D      		mov r24,r15
- 373 005a 0E94 0000 		call nrk_set_status
+ 389               	.LM8:
+ 390 006e 41E0      		ldi r20,lo8(1)
+ 391 0070 61E0      		ldi r22,lo8(1)
+ 392 0072 872D      		mov r24,r7
+ 393 0074 0E94 0000 		call nrk_set_status
   88:main.c        **** 		val=nrk_read(fd,&buf,2);
- 375               	.LM8:
- 376 005e 42E0      		ldi r20,lo8(2)
- 377 0060 BE01      		movw r22,r28
- 378 0062 6F5F      		subi r22,-1
- 379 0064 7F4F      		sbci r23,-1
- 380 0066 8F2D      		mov r24,r15
- 381 0068 0E94 0000 		call nrk_read
-  90:main.c        **** 		if(buf > 1000){
- 383               	.LM9:
- 384 006c 2981      		ldd r18,Y+1
- 385 006e 3A81      		ldd r19,Y+2
- 386 0070 293E      		cpi r18,-23
- 387 0072 83E0      		ldi r24,3
- 388 0074 3807      		cpc r19,r24
- 389 0076 00F0      		brlo .L3
-  91:main.c        **** 			printf( " dark \n");
- 391               	.LM10:
- 392 0078 80E0      		ldi r24,lo8(.LC2)
- 393 007a 90E0      		ldi r25,hi8(.LC2)
- 394 007c 00C0      		rjmp .L8
- 395               	.L3:
-  95:main.c        **** 			if(buf < 700){
- 397               	.LM11:
- 398 007e 2C3B      		cpi r18,-68
- 399 0080 3240      		sbci r19,2
- 400 0082 00F4      		brsh .L5
-  96:main.c        **** 				printf( " daylight \n");
- 402               	.LM12:
- 403 0084 80E0      		ldi r24,lo8(.LC3)
- 404 0086 90E0      		ldi r25,hi8(.LC3)
- 405 0088 00C0      		rjmp .L8
- 406               	.L5:
- 100:main.c        **** 				printf( " room-light \n");
- 408               	.LM13:
- 409 008a 80E0      		ldi r24,lo8(.LC4)
- 410 008c 90E0      		ldi r25,hi8(.LC4)
- 411               	.L8:
- 412 008e 0E94 0000 		call puts
- 414               	.LM14:
- 415 0092 8A81      		ldd r24,Y+2
- 416 0094 8F93      		push r24
- 417 0096 8981      		ldd r24,Y+1
- 418 0098 8F93      		push r24
- 419 009a 1F93      		push r17
- 420 009c 0F93      		push r16
- 421 009e 0E94 0000 		call printf
- 105:main.c        **** 		nrk_wait_until_next_period();
- 423               	.LM15:
- 424 00a2 0E94 0000 		call nrk_wait_until_next_period
- 106:main.c        **** 		cnt++;
- 107:main.c        **** 	}
- 426               	.LM16:
- 427 00a6 0F90      		pop __tmp_reg__
- 428 00a8 0F90      		pop __tmp_reg__
- 429 00aa 0F90      		pop __tmp_reg__
- 430 00ac 0F90      		pop __tmp_reg__
- 431 00ae 00C0      		rjmp .L7
- 437               	.Lscope1:
- 439               		.stabd	78,0,0
- 441               	.global	nrk_create_taskset
- 443               	nrk_create_taskset:
- 444               		.stabd	46,0,0
- 108:main.c        **** }
- 109:main.c        **** 
- 110:main.c        **** 
- 111:main.c        **** void
- 112:main.c        **** nrk_create_taskset()
- 113:main.c        **** {
- 446               	.LM17:
- 447               	.LFBB2:
- 448               	/* prologue: function */
- 449               	/* frame size = 0 */
- 450               	/* stack size = 0 */
- 451               	.L__stack_usage = 0
- 114:main.c        ****   TaskOne.task = Task1;
- 453               	.LM18:
- 454 00b0 80E0      		ldi r24,lo8(gs(Task1))
- 455 00b2 90E0      		ldi r25,hi8(gs(Task1))
- 456 00b4 9093 0000 		sts TaskOne+5+1,r25
- 457 00b8 8093 0000 		sts TaskOne+5,r24
- 115:main.c        ****   nrk_task_set_stk( &TaskOne, Stack1, NRK_APP_STACKSIZE);
- 459               	.LM19:
- 460 00bc 40E8      		ldi r20,lo8(-128)
- 461 00be 50E0      		ldi r21,0
- 462 00c0 60E0      		ldi r22,lo8(Stack1)
- 463 00c2 70E0      		ldi r23,hi8(Stack1)
- 464 00c4 80E0      		ldi r24,lo8(TaskOne)
- 465 00c6 90E0      		ldi r25,hi8(TaskOne)
- 466 00c8 0E94 0000 		call nrk_task_set_stk
- 116:main.c        ****   TaskOne.prio = 1;
- 468               	.LM20:
- 469 00cc 81E0      		ldi r24,lo8(1)
- 470 00ce 8093 0000 		sts TaskOne+8,r24
- 117:main.c        ****   TaskOne.FirstActivation = TRUE;
- 472               	.LM21:
- 473 00d2 8093 0000 		sts TaskOne+7,r24
- 118:main.c        ****   TaskOne.Type = BASIC_TASK;
- 475               	.LM22:
- 476 00d6 8093 0000 		sts TaskOne+9,r24
- 119:main.c        ****   TaskOne.SchType = PREEMPTIVE;
- 478               	.LM23:
- 479 00da 8093 0000 		sts TaskOne+10,r24
- 120:main.c        ****   TaskOne.period.secs = 0;
- 481               	.LM24:
- 482 00de 1092 0000 		sts TaskOne+11,__zero_reg__
- 483 00e2 1092 0000 		sts TaskOne+11+1,__zero_reg__
- 484 00e6 1092 0000 		sts TaskOne+11+2,__zero_reg__
- 485 00ea 1092 0000 		sts TaskOne+11+3,__zero_reg__
- 121:main.c        ****   TaskOne.period.nano_secs = 2000*NANOS_PER_MS; //*NANOS_PER_MS;
- 487               	.LM25:
- 488 00ee 80E0      		ldi r24,0
- 489 00f0 94E9      		ldi r25,lo8(-108)
- 490 00f2 A5E3      		ldi r26,lo8(53)
- 491 00f4 B7E7      		ldi r27,lo8(119)
- 492 00f6 8093 0000 		sts TaskOne+15,r24
- 493 00fa 9093 0000 		sts TaskOne+15+1,r25
- 494 00fe A093 0000 		sts TaskOne+15+2,r26
- 495 0102 B093 0000 		sts TaskOne+15+3,r27
- 122:main.c        ****   TaskOne.cpu_reserve.secs = 0;
- 497               	.LM26:
- 498 0106 1092 0000 		sts TaskOne+19,__zero_reg__
- 499 010a 1092 0000 		sts TaskOne+19+1,__zero_reg__
- 500 010e 1092 0000 		sts TaskOne+19+2,__zero_reg__
- 501 0112 1092 0000 		sts TaskOne+19+3,__zero_reg__
- 123:main.c        ****   TaskOne.cpu_reserve.nano_secs =  200*NANOS_PER_MS;
- 503               	.LM27:
- 504 0116 80E0      		ldi r24,0
- 505 0118 92EC      		ldi r25,lo8(-62)
- 506 011a ABEE      		ldi r26,lo8(-21)
- 507 011c BBE0      		ldi r27,lo8(11)
- 508 011e 8093 0000 		sts TaskOne+23,r24
- 509 0122 9093 0000 		sts TaskOne+23+1,r25
- 510 0126 A093 0000 		sts TaskOne+23+2,r26
- 511 012a B093 0000 		sts TaskOne+23+3,r27
- 124:main.c        ****   TaskOne.offset.secs = 0;
- 513               	.LM28:
- 514 012e 1092 0000 		sts TaskOne+27,__zero_reg__
- 515 0132 1092 0000 		sts TaskOne+27+1,__zero_reg__
- 516 0136 1092 0000 		sts TaskOne+27+2,__zero_reg__
- 517 013a 1092 0000 		sts TaskOne+27+3,__zero_reg__
- 125:main.c        ****   TaskOne.offset.nano_secs= 0;
- 519               	.LM29:
- 520 013e 1092 0000 		sts TaskOne+31,__zero_reg__
- 521 0142 1092 0000 		sts TaskOne+31+1,__zero_reg__
- 522 0146 1092 0000 		sts TaskOne+31+2,__zero_reg__
- 523 014a 1092 0000 		sts TaskOne+31+3,__zero_reg__
- 126:main.c        ****   nrk_activate_task (&TaskOne);
- 525               	.LM30:
- 526 014e 80E0      		ldi r24,lo8(TaskOne)
- 527 0150 90E0      		ldi r25,hi8(TaskOne)
- 528 0152 0C94 0000 		jmp nrk_activate_task
- 530               	.Lscope2:
- 532               		.stabd	78,0,0
- 534               	.global	nrk_register_drivers
- 536               	nrk_register_drivers:
- 537               		.stabd	46,0,0
- 127:main.c        **** 
- 128:main.c        **** }
- 129:main.c        **** 
- 130:main.c        **** void nrk_register_drivers()
- 131:main.c        **** {
- 539               	.LM31:
- 540               	.LFBB3:
- 541               	/* prologue: function */
- 542               	/* frame size = 0 */
- 543               	/* stack size = 0 */
- 544               	.L__stack_usage = 0
- 132:main.c        **** int8_t val;
+ 395               	.LM9:
+ 396 0078 42E0      		ldi r20,lo8(2)
+ 397 007a BE01      		movw r22,r28
+ 398 007c 6F5F      		subi r22,-1
+ 399 007e 7F4F      		sbci r23,-1
+ 400 0080 872D      		mov r24,r7
+ 401 0082 0E94 0000 		call nrk_read
+  92:main.c        **** 		if(buf > 1000){
+ 403               	.LM10:
+ 404 0086 2981      		ldd r18,Y+1
+ 405 0088 3A81      		ldd r19,Y+2
+ 406 008a 293E      		cpi r18,-23
+ 407 008c 83E0      		ldi r24,3
+ 408 008e 3807      		cpc r19,r24
+ 409 0090 00F4      		brsh .L5
+  97:main.c        **** 			if(buf < 600){
+ 411               	.LM11:
+ 412 0092 2835      		cpi r18,88
+ 413 0094 92E0      		ldi r25,2
+ 414 0096 3907      		cpc r19,r25
+ 415 0098 00F4      		brsh .L6
+  98:main.c        **** 				light_type= "daylight \r\n";
+ 417               	.LM12:
+ 418 009a 00E0      		ldi r16,lo8(.LC1)
+ 419 009c 10E0      		ldi r17,hi8(.LC1)
+ 420 009e 00C0      		rjmp .L3
+ 421               	.L5:
+  93:main.c        **** 			light_type= "dark \r\n";
+ 423               	.LM13:
+ 424 00a0 00E0      		ldi r16,lo8(.LC0)
+ 425 00a2 10E0      		ldi r17,hi8(.LC0)
+ 426 00a4 00C0      		rjmp .L3
+ 427               	.L6:
+ 102:main.c        **** 				light_type= "room-light \r\n";
+ 429               	.LM14:
+ 430 00a6 00E0      		ldi r16,lo8(.LC2)
+ 431 00a8 10E0      		ldi r17,hi8(.LC2)
+ 432               	.L3:
+ 107:main.c        **** 		printf( " ambient light value= %d%s",-1*buf + 1024, "lumens");
+ 434               	.LM15:
+ 435 00aa BF92      		push r11
+ 436 00ac AF92      		push r10
+ 437 00ae C401      		movw r24,r8
+ 438 00b0 821B      		sub r24,r18
+ 439 00b2 930B      		sbc r25,r19
+ 440 00b4 9C01      		movw r18,r24
+ 441 00b6 3F93      		push r19
+ 442 00b8 8F93      		push r24
+ 443 00ba DF92      		push r13
+ 444 00bc CF92      		push r12
+ 445 00be 0E94 0000 		call printf
+ 447               	.LM16:
+ 448 00c2 1F93      		push r17
+ 449 00c4 0F93      		push r16
+ 450 00c6 FF92      		push r15
+ 451 00c8 EF92      		push r14
+ 452 00ca 0E94 0000 		call printf
+ 109:main.c        **** 		nrk_wait_until_next_period();
+ 454               	.LM17:
+ 455 00ce 0E94 0000 		call nrk_wait_until_next_period
+ 456               	.LBE2:
+ 110:main.c        **** 		cnt++;
+ 111:main.c        **** 	}
+ 458               	.LM18:
+ 459 00d2 0FB6      		in __tmp_reg__,__SREG__
+ 460 00d4 F894      		cli
+ 461 00d6 DEBF      		out __SP_H__,r29
+ 462 00d8 0FBE      		out __SREG__,__tmp_reg__
+ 463 00da CDBF      		out __SP_L__,r28
+ 464 00dc 00C0      		rjmp .L7
+ 473               	.Lscope1:
+ 475               		.stabd	78,0,0
+ 477               	.global	nrk_create_taskset
+ 479               	nrk_create_taskset:
+ 480               		.stabd	46,0,0
+ 112:main.c        **** }
+ 113:main.c        **** 
+ 114:main.c        **** 
+ 115:main.c        **** void
+ 116:main.c        **** nrk_create_taskset()
+ 117:main.c        **** {
+ 482               	.LM19:
+ 483               	.LFBB2:
+ 484               	/* prologue: function */
+ 485               	/* frame size = 0 */
+ 486               	/* stack size = 0 */
+ 487               	.L__stack_usage = 0
+ 118:main.c        ****   TaskOne.task = Task1;
+ 489               	.LM20:
+ 490 00de 80E0      		ldi r24,lo8(gs(Task1))
+ 491 00e0 90E0      		ldi r25,hi8(gs(Task1))
+ 492 00e2 9093 0000 		sts TaskOne+5+1,r25
+ 493 00e6 8093 0000 		sts TaskOne+5,r24
+ 119:main.c        ****   nrk_task_set_stk( &TaskOne, Stack1, NRK_APP_STACKSIZE);
+ 495               	.LM21:
+ 496 00ea 40E8      		ldi r20,lo8(-128)
+ 497 00ec 50E0      		ldi r21,0
+ 498 00ee 60E0      		ldi r22,lo8(Stack1)
+ 499 00f0 70E0      		ldi r23,hi8(Stack1)
+ 500 00f2 80E0      		ldi r24,lo8(TaskOne)
+ 501 00f4 90E0      		ldi r25,hi8(TaskOne)
+ 502 00f6 0E94 0000 		call nrk_task_set_stk
+ 120:main.c        ****   TaskOne.prio = 1;
+ 504               	.LM22:
+ 505 00fa 81E0      		ldi r24,lo8(1)
+ 506 00fc 8093 0000 		sts TaskOne+8,r24
+ 121:main.c        ****   TaskOne.FirstActivation = TRUE;
+ 508               	.LM23:
+ 509 0100 8093 0000 		sts TaskOne+7,r24
+ 122:main.c        ****   TaskOne.Type = BASIC_TASK;
+ 511               	.LM24:
+ 512 0104 8093 0000 		sts TaskOne+9,r24
+ 123:main.c        ****   TaskOne.SchType = PREEMPTIVE;
+ 514               	.LM25:
+ 515 0108 8093 0000 		sts TaskOne+10,r24
+ 124:main.c        ****   TaskOne.period.secs = 0;
+ 517               	.LM26:
+ 518 010c 1092 0000 		sts TaskOne+11,__zero_reg__
+ 519 0110 1092 0000 		sts TaskOne+11+1,__zero_reg__
+ 520 0114 1092 0000 		sts TaskOne+11+2,__zero_reg__
+ 521 0118 1092 0000 		sts TaskOne+11+3,__zero_reg__
+ 125:main.c        ****   TaskOne.period.nano_secs = 2000*NANOS_PER_MS; //*NANOS_PER_MS;
+ 523               	.LM27:
+ 524 011c 80E0      		ldi r24,0
+ 525 011e 94E9      		ldi r25,lo8(-108)
+ 526 0120 A5E3      		ldi r26,lo8(53)
+ 527 0122 B7E7      		ldi r27,lo8(119)
+ 528 0124 8093 0000 		sts TaskOne+15,r24
+ 529 0128 9093 0000 		sts TaskOne+15+1,r25
+ 530 012c A093 0000 		sts TaskOne+15+2,r26
+ 531 0130 B093 0000 		sts TaskOne+15+3,r27
+ 126:main.c        ****   TaskOne.cpu_reserve.secs = 0;
+ 533               	.LM28:
+ 534 0134 1092 0000 		sts TaskOne+19,__zero_reg__
+ 535 0138 1092 0000 		sts TaskOne+19+1,__zero_reg__
+ 536 013c 1092 0000 		sts TaskOne+19+2,__zero_reg__
+ 537 0140 1092 0000 		sts TaskOne+19+3,__zero_reg__
+ 127:main.c        ****   TaskOne.cpu_reserve.nano_secs =  200*NANOS_PER_MS;
+ 539               	.LM29:
+ 540 0144 80E0      		ldi r24,0
+ 541 0146 92EC      		ldi r25,lo8(-62)
+ 542 0148 ABEE      		ldi r26,lo8(-21)
+ 543 014a BBE0      		ldi r27,lo8(11)
+ 544 014c 8093 0000 		sts TaskOne+23,r24
+ 545 0150 9093 0000 		sts TaskOne+23+1,r25
+ 546 0154 A093 0000 		sts TaskOne+23+2,r26
+ 547 0158 B093 0000 		sts TaskOne+23+3,r27
+ 128:main.c        ****   TaskOne.offset.secs = 0;
+ 549               	.LM30:
+ 550 015c 1092 0000 		sts TaskOne+27,__zero_reg__
+ 551 0160 1092 0000 		sts TaskOne+27+1,__zero_reg__
+ 552 0164 1092 0000 		sts TaskOne+27+2,__zero_reg__
+ 553 0168 1092 0000 		sts TaskOne+27+3,__zero_reg__
+ 129:main.c        ****   TaskOne.offset.nano_secs= 0;
+ 555               	.LM31:
+ 556 016c 1092 0000 		sts TaskOne+31,__zero_reg__
+ 557 0170 1092 0000 		sts TaskOne+31+1,__zero_reg__
+ 558 0174 1092 0000 		sts TaskOne+31+2,__zero_reg__
+ 559 0178 1092 0000 		sts TaskOne+31+3,__zero_reg__
+ 130:main.c        ****   nrk_activate_task (&TaskOne);
+ 561               	.LM32:
+ 562 017c 80E0      		ldi r24,lo8(TaskOne)
+ 563 017e 90E0      		ldi r25,hi8(TaskOne)
+ 564 0180 0C94 0000 		jmp nrk_activate_task
+ 566               	.Lscope2:
+ 568               		.stabd	78,0,0
+ 570               	.global	nrk_register_drivers
+ 572               	nrk_register_drivers:
+ 573               		.stabd	46,0,0
+ 131:main.c        **** 
+ 132:main.c        **** }
  133:main.c        **** 
- 134:main.c        **** // Register the Basic FireFly Sensor device driver
- 135:main.c        **** // Make sure to add: 
- 136:main.c        **** //     #define NRK_MAX_DRIVER_CNT  
- 137:main.c        **** //     in nrk_cfg.h
- 138:main.c        **** // Make sure to add: 
- 139:main.c        **** //     SRC += $(ROOT_DIR)/src/drivers/platform/$(PLATFORM_TYPE)/source/ff_basic_sensor.c
- 140:main.c        **** //     in makefile
- 141:main.c        **** val=nrk_register_driver( &dev_manager_ff3_sensors,FIREFLY_3_SENSOR_BASIC);
- 546               	.LM32:
- 547 0156 63E0      		ldi r22,lo8(3)
- 548 0158 80E0      		ldi r24,lo8(gs(dev_manager_ff3_sensors))
- 549 015a 90E0      		ldi r25,hi8(gs(dev_manager_ff3_sensors))
- 550 015c 0E94 0000 		call nrk_register_driver
- 142:main.c        **** if(val==NRK_ERROR) nrk_kprintf( PSTR("Failed to load my ADC driver\r\n") );
- 552               	.LM33:
- 553 0160 8F3F      		cpi r24,lo8(-1)
- 554 0162 01F4      		brne .L10
- 556               	.LM34:
- 557 0164 80E0      		ldi r24,lo8(__c.3161)
- 558 0166 90E0      		ldi r25,hi8(__c.3161)
- 559 0168 0C94 0000 		jmp nrk_kprintf
- 560               	.L10:
- 561 016c 0895      		ret
- 563               	.Lscope3:
- 565               		.stabd	78,0,0
- 566               		.section	.rodata.str1.1
- 567               	.LC6:
- 568 0054 7374 6172 		.string	"starting...\r"
- 568      7469 6E67 
- 568      2E2E 2E0D 
- 568      00
- 569               		.section	.text.startup,"ax",@progbits
- 571               	.global	main
- 573               	main:
- 574               		.stabd	46,0,0
+ 134:main.c        **** void nrk_register_drivers()
+ 135:main.c        **** {
+ 575               	.LM33:
+ 576               	.LFBB3:
+ 577               	/* prologue: function */
+ 578               	/* frame size = 0 */
+ 579               	/* stack size = 0 */
+ 580               	.L__stack_usage = 0
+ 136:main.c        **** int8_t val;
+ 137:main.c        **** 
+ 138:main.c        **** // Register the Basic FireFly Sensor device driver
+ 139:main.c        **** // Make sure to add: 
+ 140:main.c        **** //     #define NRK_MAX_DRIVER_CNT  
+ 141:main.c        **** //     in nrk_cfg.h
+ 142:main.c        **** // Make sure to add: 
+ 143:main.c        **** //     SRC += $(ROOT_DIR)/src/drivers/platform/$(PLATFORM_TYPE)/source/ff_basic_sensor.c
+ 144:main.c        **** //     in makefile
+ 145:main.c        **** val=nrk_register_driver( &dev_manager_ff3_sensors,FIREFLY_3_SENSOR_BASIC);
+ 582               	.LM34:
+ 583 0184 63E0      		ldi r22,lo8(3)
+ 584 0186 80E0      		ldi r24,lo8(gs(dev_manager_ff3_sensors))
+ 585 0188 90E0      		ldi r25,hi8(gs(dev_manager_ff3_sensors))
+ 586 018a 0E94 0000 		call nrk_register_driver
+ 146:main.c        **** if(val==NRK_ERROR) nrk_kprintf( PSTR("Failed to load my ADC driver\r\n") );
+ 588               	.LM35:
+ 589 018e 8F3F      		cpi r24,lo8(-1)
+ 590 0190 01F4      		brne .L9
+ 592               	.LM36:
+ 593 0192 80E0      		ldi r24,lo8(__c.3162)
+ 594 0194 90E0      		ldi r25,hi8(__c.3162)
+ 595 0196 0C94 0000 		jmp nrk_kprintf
+ 596               	.L9:
+ 597 019a 0895      		ret
+ 599               	.Lscope3:
+ 601               		.stabd	78,0,0
+ 602               		.section	.rodata.str1.1
+ 603               	.LC8:
+ 604 008c 7374 6172 		.string	"starting...\r"
+ 604      7469 6E67 
+ 604      2E2E 2E0D 
+ 604      00
+ 605               		.section	.text.startup,"ax",@progbits
+ 607               	.global	main
+ 609               	main:
+ 610               		.stabd	46,0,0
   50:main.c        **** {
- 576               	.LM35:
- 577               	.LFBB4:
- 578               	/* prologue: function */
- 579               	/* frame size = 0 */
- 580               	/* stack size = 0 */
- 581               	.L__stack_usage = 0
+ 612               	.LM37:
+ 613               	.LFBB4:
+ 614               	/* prologue: function */
+ 615               	/* frame size = 0 */
+ 616               	/* stack size = 0 */
+ 617               	.L__stack_usage = 0
   52:main.c        ****   nrk_setup_ports();
- 583               	.LM36:
- 584 0000 0E94 0000 		call nrk_setup_ports
+ 619               	.LM38:
+ 620 0000 0E94 0000 		call nrk_setup_ports
   53:main.c        ****   nrk_setup_uart(UART_BAUDRATE_115K2);
- 586               	.LM37:
- 587 0004 80E1      		ldi r24,lo8(16)
- 588 0006 90E0      		ldi r25,0
- 589 0008 0E94 0000 		call nrk_setup_uart
+ 622               	.LM39:
+ 623 0004 80E1      		ldi r24,lo8(16)
+ 624 0006 90E0      		ldi r25,0
+ 625 0008 0E94 0000 		call nrk_setup_uart
   56:main.c        ****   printf( PSTR("starting...\r\n") );
- 591               	.LM38:
- 592 000c 80E0      		ldi r24,lo8(.LC6)
- 593 000e 90E0      		ldi r25,hi8(.LC6)
- 594 0010 0E94 0000 		call puts
+ 627               	.LM40:
+ 628 000c 80E0      		ldi r24,lo8(.LC8)
+ 629 000e 90E0      		ldi r25,hi8(.LC8)
+ 630 0010 0E94 0000 		call puts
   58:main.c        ****   nrk_init();
- 596               	.LM39:
- 597 0014 0E94 0000 		call nrk_init
+ 632               	.LM41:
+ 633 0014 0E94 0000 		call nrk_init
   59:main.c        ****   nrk_time_set(0,0);
- 599               	.LM40:
- 600 0018 20E0      		ldi r18,0
- 601 001a 30E0      		ldi r19,0
- 602 001c A901      		movw r20,r18
- 603 001e 60E0      		ldi r22,0
- 604 0020 70E0      		ldi r23,0
- 605 0022 CB01      		movw r24,r22
- 606 0024 0E94 0000 		call nrk_time_set
+ 635               	.LM42:
+ 636 0018 20E0      		ldi r18,0
+ 637 001a 30E0      		ldi r19,0
+ 638 001c A901      		movw r20,r18
+ 639 001e 60E0      		ldi r22,0
+ 640 0020 70E0      		ldi r23,0
+ 641 0022 CB01      		movw r24,r22
+ 642 0024 0E94 0000 		call nrk_time_set
   61:main.c        ****   nrk_register_drivers();
- 608               	.LM41:
- 609 0028 0E94 0000 		call nrk_register_drivers
+ 644               	.LM43:
+ 645 0028 0E94 0000 		call nrk_register_drivers
   62:main.c        ****   nrk_create_taskset ();
- 611               	.LM42:
- 612 002c 0E94 0000 		call nrk_create_taskset
+ 647               	.LM44:
+ 648 002c 0E94 0000 		call nrk_create_taskset
   63:main.c        ****   nrk_start();
- 614               	.LM43:
- 615 0030 0E94 0000 		call nrk_start
+ 650               	.LM45:
+ 651 0030 0E94 0000 		call nrk_start
   66:main.c        **** }
- 617               	.LM44:
- 618 0034 80E0      		ldi r24,0
- 619 0036 90E0      		ldi r25,0
- 620 0038 0895      		ret
- 622               	.Lscope4:
- 624               		.stabd	78,0,0
- 625               		.comm	TaskOne,35,1
- 626               		.comm	Stack1,128,1
- 627               		.comm	app_timer0_prescale,1,1
- 628               		.comm	app_timer0_callback,2,1
- 629               		.comm	_nrk_time_trigger,1,1
- 630               		.comm	_nrk_prev_timer_val,1,1
- 631               		.comm	error_num,1,1
- 632               		.comm	error_task,1,1
- 633               		.comm	nrk_kernel_stk_ptr,2,1
- 634               		.comm	nrk_idle_task_stk,128,1
- 635               		.comm	_nrk_signal_list,4,1
- 636               		.section	.progmem.data,"a",@progbits
- 639               	__c.3153:
- 640 0000 4661 696C 		.string	"Failed to open sensor driver\r\n"
- 640      6564 2074 
- 640      6F20 6F70 
- 640      656E 2073 
- 640      656E 736F 
- 643               	__c.3161:
- 644 001f 4661 696C 		.string	"Failed to load my ADC driver\r\n"
- 644      6564 2074 
- 644      6F20 6C6F 
- 644      6164 206D 
- 644      7920 4144 
- 656               		.text
- 658               	.Letext0:
- 659               		.ident	"GCC: (GNU) 4.7.2"
- 660               	.global __do_copy_data
- 661               	.global __do_clear_bss
+ 653               	.LM46:
+ 654 0034 80E0      		ldi r24,0
+ 655 0036 90E0      		ldi r25,0
+ 656 0038 0895      		ret
+ 658               	.Lscope4:
+ 660               		.stabd	78,0,0
+ 661               		.comm	TaskOne,35,1
+ 662               		.comm	Stack1,128,1
+ 663               		.comm	app_timer0_prescale,1,1
+ 664               		.comm	app_timer0_callback,2,1
+ 665               		.comm	_nrk_time_trigger,1,1
+ 666               		.comm	_nrk_prev_timer_val,1,1
+ 667               		.comm	error_num,1,1
+ 668               		.comm	error_task,1,1
+ 669               		.comm	nrk_kernel_stk_ptr,2,1
+ 670               		.comm	nrk_idle_task_stk,128,1
+ 671               		.comm	_nrk_signal_list,4,1
+ 672               		.section	.progmem.data,"a",@progbits
+ 675               	__c.3153:
+ 676 0000 4661 696C 		.string	"Failed to open sensor driver\r\n"
+ 676      6564 2074 
+ 676      6F20 6F70 
+ 676      656E 2073 
+ 676      656E 736F 
+ 679               	__c.3162:
+ 680 001f 4661 696C 		.string	"Failed to load my ADC driver\r\n"
+ 680      6564 2074 
+ 680      6F20 6C6F 
+ 680      6164 206D 
+ 680      7920 4144 
+ 692               		.text
+ 694               	.Letext0:
+ 695               		.ident	"GCC: (GNU) 4.7.2"
+ 696               	.global __do_copy_data
+ 697               	.global __do_clear_bss
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 main.c
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:2      *ABS*:000000000000003e __SP_H__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:3      *ABS*:000000000000003d __SP_L__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:4      *ABS*:000000000000003f __SREG__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:5      *ABS*:000000000000003b __RAMPZ__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:6      *ABS*:0000000000000000 __tmp_reg__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:7      *ABS*:0000000000000001 __zero_reg__
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:308    .text:0000000000000000 Task1
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:639    .progmem.data:0000000000000000 __c.3153
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:443    .text:00000000000000b0 nrk_create_taskset
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccSmyKWO.s:2      *ABS*:000000000000003e __SP_H__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccSmyKWO.s:3      *ABS*:000000000000003d __SP_L__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccSmyKWO.s:4      *ABS*:000000000000003f __SREG__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccSmyKWO.s:5      *ABS*:000000000000003b __RAMPZ__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccSmyKWO.s:6      *ABS*:0000000000000000 __tmp_reg__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccSmyKWO.s:7      *ABS*:0000000000000001 __zero_reg__
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccSmyKWO.s:312    .text:0000000000000000 Task1
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccSmyKWO.s:675    .progmem.data:0000000000000000 __c.3153
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccSmyKWO.s:479    .text:00000000000000de nrk_create_taskset
                             *COM*:0000000000000023 TaskOne
                             *COM*:0000000000000080 Stack1
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:536    .text:0000000000000156 nrk_register_drivers
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:643    .progmem.data:000000000000001f __c.3161
-/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccKmRdh7.s:573    .text.startup:0000000000000000 main
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccSmyKWO.s:572    .text:0000000000000184 nrk_register_drivers
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccSmyKWO.s:679    .progmem.data:000000000000001f __c.3162
+/var/folders/7t/5z8zx9ys69n2cs122c_s48hh0000gn/T//ccSmyKWO.s:609    .text.startup:0000000000000000 main
                             *COM*:0000000000000001 app_timer0_prescale
                             *COM*:0000000000000002 app_timer0_callback
                             *COM*:0000000000000001 _nrk_time_trigger
@@ -515,7 +558,6 @@ nrk_open
 nrk_kprintf
 nrk_set_status
 nrk_read
-puts
 nrk_wait_until_next_period
 nrk_task_set_stk
 nrk_activate_task
@@ -523,6 +565,7 @@ dev_manager_ff3_sensors
 nrk_register_driver
 nrk_setup_ports
 nrk_setup_uart
+puts
 nrk_init
 nrk_time_set
 nrk_start

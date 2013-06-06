@@ -91,16 +91,25 @@ uint64_t bbuf;
 	// Example of setting a sensor 
 	val=nrk_set_status(fd,SENSOR_SELECT,HUMIDITY);
 	val=nrk_read(fd,&bbuf,4); //percent humidity
-	printf( "percent humidity = %lu ",bbuf);
+	// Relative Humidity (%)  linear          |  1 |    0 |         0 |       100 |
+	printf( "Percent humidity = %lu %s",bbuf, "%");
+
 	val=nrk_set_status(fd,SENSOR_SELECT,TEMP2);
-	val=nrk_read(fd,&bbuf,4); //degrees F
-	printf( "temp2 in degrees= %lu ",bbuf/10);
+    // 	val=nrk_read(fd,&bbuf,4); //degrees F
+    // 	 temp         | Temperature (analog sensor, F)  | linear          |           0.07506 |   32 |        40 |        90 |
+    // | digital_temp | Temperature (digital sensor, F) | linear          |              0.18 |   32 |        40 |        90
+	printf( " Temperature = %lu%s ",bbuf/10, "degrees");
+	
 	val=nrk_set_status(fd,SENSOR_SELECT,PRESS);
 	val=nrk_read(fd,&bbuf,4);
-	printf( "pressure= %lu ",bbuf);
+	// pressure     | Barometric Pressure (in. Hg)    | linear          | 0.000295780903035 |    0 |        28 |        31 |
+	printf( " Barometric Pressure (in. Hg)= %lu ",0.000295780903035*bbuf);
+	
 	val=nrk_set_status(fd,SENSOR_SELECT,LIGHT);
 	val=nrk_read(fd,&buf,2);
-	printf( " light=%d",buf);
+	// light        | Incident Illumination (lumens)  | linear          |                -1 | 1024 |         0 |      1024 
+	printf( " Incident Illumination (lumens) =%d",-1*buf+1024);
+	
 	uint16_t sum = 0;
     int size = sizeof(motions)/sizeof(motions[0]);
 	for ( i = 0; i < size; i++ )
@@ -112,14 +121,16 @@ uint64_t bbuf;
 
     nrk_led_clr(RED_LED);
     nrk_led_clr(GREEN_LED);
+
+    printf( " Motion based on ligth change :\r\n");
 	if( abs(buf - avg) >10)
 	//if( abs(buf - buf_last) >2)
-		{ printf("%s"," Motion Detected " );
+		{ printf("%s","Motion Detected " );
 	      nrk_led_toggle(RED_LED);
 	  	}
 	else 
 	{
-		printf("%s"," Motion Not Detected " );
+		printf("%s","Motion Not Detected " );
 		nrk_led_toggle(GREEN_LED);
 	}
 
@@ -129,26 +140,30 @@ uint64_t bbuf;
 	// }
 	buf_last = buf; 
 
-	printf( "avg light=%d",avg);
+	// printf( " Avg light=%d",avg);
 
-	val=nrk_set_status(fd,SENSOR_SELECT,TEMP);
-	val=nrk_read(fd,&buf,2); //degrees F
-	printf( " temp in degrees=%03d",buf/10);
+	// val=nrk_set_status(fd,SENSOR_SELECT,TEMP);
+	// val=nrk_read(fd,&buf,2); //degrees F
+	// printf( " Temp in degrees=%03d",buf/10);
+
+// 	| acc_x        | Acceleration - X (ft / sec^2)   | linear          |                 1 |    0 |         0 |        50 |
+// | acc_y        | Acceleration - Y (ft / sec^2)   | linear          |                 1 |    0 |         0 |        50 |
+// | acc_z        | Acceleration - Z (ft / sec^2)   | linear          |                 1 |    0 |         0 |        50
 	val=nrk_set_status(fd,SENSOR_SELECT,ACC_X);
 	val=nrk_read(fd,&buf,2);
-	printf( " acc_x=%d",buf);
+	printf( " Acceleration - X (ft / sec^2) =%d",buf);
 	val=nrk_set_status(fd,SENSOR_SELECT,ACC_Y);
 	val=nrk_read(fd,&buf,2);
-	printf( " acc_y=%d",buf);
+	printf( " Acceleration - Y (ft / sec^2) =%d",buf);
 	val=nrk_set_status(fd,SENSOR_SELECT,ACC_Z);
 	
 	val=nrk_read(fd,&buf,2); //motion detected/no motion detected
-	printf( " motion=%d",buf);
+	printf( " Acceleration - Z (ft / sec^2) =%d\r\n",buf);
 
-  	val=nrk_set_status(fd,SENSOR_SELECT,AUDIO_P2P);
-	nrk_spin_wait_us(60000);
-	val=nrk_read(fd,&buf,2);
-	printf( " audio=%d\r\n",buf);
+ //  	val=nrk_set_status(fd,SENSOR_SELECT,AUDIO_P2P);
+	// nrk_spin_wait_us(60000);
+	// val=nrk_read(fd,&buf,2);
+	// printf( " Audio=%d\r\n",buf);
 	//nrk_close(fd);
 	nrk_wait_until_next_period();
 	cnt++;

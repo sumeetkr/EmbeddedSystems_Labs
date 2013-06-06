@@ -87,21 +87,25 @@ uint64_t bbuf;
 		val=nrk_set_status(fd,SENSOR_SELECT,LIGHT);
 		val=nrk_read(fd,&buf,2);
 
+    char *light_type;
+
 		if(buf > 1000){
-			printf( " dark \n");
+			light_type= "dark \r\n";
 		}
 		else
 		{
-			if(buf < 700){
-				printf( " daylight \n");
+			if(buf < 600){
+				light_type= "daylight \r\n";
 			}
 			else
 			{
-				printf( " room-light \n");
+				light_type= "room-light \r\n";
 			}
 		}
 
-		printf( " light=%d\r\n",buf);
+    // a = -1, b= 1024 - linear transformation, lumens unit
+		printf( " ambient light value= %d%s",-1*buf + 1024, " lumens");
+    printf( " : light type detected as %s\r\n", light_type);
 		nrk_wait_until_next_period();
 		cnt++;
 	}
